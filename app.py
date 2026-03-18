@@ -73,29 +73,24 @@ with tab2:
     chain_segments = []
     points_x, points_y = [], []
     
-    # Start chains at various X positions
     x_starts = np.linspace(0.5, 9.5, 14)
     
     for x_start in x_starts:
         curr_x = x_start
         segment_x, segment_y = [curr_x], [0.0]
         
-        # Determine if this chain will break to form a "chain end" defect
         is_broken_chain = (3.5 < x_start < 6.5)
         
         for y in np.linspace(0.2, 10.0, 45):
-            # Create the void via chain-end termination
             if is_broken_chain and (4.0 < y < 6.0):
                 if len(segment_x) > 1:
                     chain_segments.append((segment_x, segment_y))
-                segment_x, segment_y = [], [] # Start a new segment after the gap
+                segment_x, segment_y = [], [] 
                 curr_x = x_start + np.random.normal(0, 0.3) 
                 continue
                 
-            # Random walk to simulate amorphous polymer wiggling
             curr_x += np.random.normal(0, 0.12)
             
-            # Steric hindrance: Chains physically bend around the void space
             dist_to_center = np.sqrt((curr_x - 5.0)**2 + (y - 5.0)**2)
             if dist_to_center < 1.6:
                 angle = np.arctan2(y - 5.0, curr_x - 5.0)
@@ -117,40 +112,36 @@ with tab2:
     X, Y = np.meshgrid(x_grid, y_grid)
     Z = np.zeros_like(X)
     
-    # Sum the repulsive potentials around the polymer backbone points
-    # We use a smaller radius to make the "chains" look like distinct ridges
     for px, py in zip(points_x, points_y):
         Z += 1.2 * np.exp(-((X - px)**2 + (Y - py)**2) / 0.25)
         
-    Z += 0.5 # Baseline energy
-    Z = np.clip(Z, 0, 7) # Cap maximum repulsion for clearer plotting
+    Z += 0.5 
+    # Loosened the Z limits here (was 7, now 15) to allow taller, more dramatic peaks
+    Z = np.clip(Z, 0, 15) 
     
-    # Find the deepest part of the free volume cavity
     min_idx = np.unravel_index(np.argmin(Z), Z.shape)
     cavity_x, cavity_y, cavity_z = X[min_idx], Y[min_idx], Z[min_idx]
     
-    # Calculate Positron Path (rolling down the gradient into the void)
     path_t = np.linspace(0, 1, 25)
     start_x, start_y = 8.5, 5.0 
     path_x = start_x + (cavity_x - start_x) * path_t
     path_y = start_y + (cavity_y - start_y) * path_t
     
+    # Map the 2D path onto the 3D Z-coordinates
+    path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.3
+
     # ==========================================
-    # LEFT COLUMN: Physical Polymer Structure
+    # LEFT COLUMN: Physical Polymer Structure (Matplotlib)
     # ==========================================
     with col1:
         st.subheader("1. Amorphous Polymer Matrix")
         
         fig_struct, ax_struct = plt.subplots(figsize=(6, 6))
         
-        # Plot the tangled polymer chains
         for cx, cy in chain_segments:
-            # Draw the backbone
             ax_struct.plot(cx, cy, '-', color='#4a69bd', alpha=0.7, linewidth=2.5)
-            # Scatter points to represent atomic nodes/monomers
             ax_struct.scatter(cx, cy, color='#4a69bd', s=15, zorder=3)
 
-        # Plot the positron path
         ax_struct.plot(path_x, path_y, color='white', linestyle='--', linewidth=2.5, label="Positron Path")
         ax_struct.scatter(path_x[0], path_y[0], color='#2ed573', s=150, zorder=5, label="Thermalized Positron")
         ax_struct.scatter(cavity_x, cavity_y, color='#ff4757', s=250, marker='*', zorder=5, label="Trapped in Void")
@@ -165,44 +156,72 @@ with tab2:
         st.pyplot(fig_struct)
 
     # ==========================================
-    # RIGHT COLUMN: Computed Energy Landscape
+    # RIGHT COLUMN: Computed Energy Landscape (Plotly Interactive)
     # ==========================================
     with col2:
         st.subheader("2. Resulting Energy Landscape")
         
-        fig_loc = plt.figure(figsize=(6, 6))
-        ax_loc = fig_loc.add_subplot(111, projection='3d')
+        fig_loc = go.Figure()
+
+        # 3D Surface
+        fig_loc.add_trace(go.Surface(
+            z=Z, x=x_grid, y=y_grid, 
+            colorscale='Plasma', 
+            opacity=0.9,
+            colorbar=dict(title="Energy Barrier", shrink=0.5)
+        ))
+
+        # Positron Path
+        fig_loc.add_trace(go.Scatter3d(
+            x=path_x, y=path_y, z=path_z,
+            mode='lines',
+            line=dict(color='white', width=6, dash='dash'),
+            name='Positron Path'
+        ))
+
+        # Start Point (Thermalized)
+        fig_loc.add_trace(go.Scatter3d(
+            x=[path_x[0]], y=[path_y[0]], z=[path_z[0]],
+            mode='markers',
+            marker=dict(color='#2ed573', size=8),
+            name='Thermalized Positron'
+        ))
+
+        # End Point (Trapped)
+        fig_loc.add_trace(go.Scatter3d(
+            x=[cavity_x], y=[cavity_y], z=[cavity_z + 0.5],
+            mode='markers',
+            marker=dict(color='#ff4757', size=10, symbol='diamond'),
+            name='Trapped in Void'
+        ))
+
+        # Formatting the Interactive Plot
+        fig_loc.update_layout(
+            scene=dict(
+                xaxis_title='X (nm)',
+                yaxis_title='Y (nm)',
+                zaxis_title='Energy (Repulsion)',
+                xaxis=dict(range=[0, 10], showgrid=False),
+                yaxis=dict(range=[0, 10], showgrid=False),
+                # Dynamic Z-axis range based on the less tight Z limits
+                zaxis=dict(range=[0, np.max(Z) + 2], showgrid=False), 
+                camera=dict(
+                    eye=dict(x=-1.5, y=-1.5, z=1.2) # Initial viewing angle
+                )
+            ),
+            margin=dict(l=0, r=0, b=0, t=30),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom", y=1.02,
+                xanchor="right", x=1
+            )
+        )
         
-        # Plot the 3D surface
-        surf = ax_loc.plot_surface(X, Y, Z, cmap='plasma', alpha=0.9, linewidth=0, antialiased=True)
-        
-        # Map the 2D path onto the 3D Z-coordinates
-        path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.2
-        
-        # Plot the path and particles
-        ax_loc.plot(path_x, path_y, path_z, color='white', linestyle='--', linewidth=2, label="Positron Path")
-        ax_loc.scatter(path_x[0], path_y[0], path_z[0], color='#2ed573', s=100, zorder=10)
-        ax_loc.scatter(cavity_x, cavity_y, cavity_z + 0.2, color='#ff4757', s=150, marker='*', zorder=10)
-        
-        # Formatting the 3D plot
-        ax_loc.set_xlabel("X (nm)", labelpad=5)
-        ax_loc.set_ylabel("Y (nm)", labelpad=5)
-        ax_loc.set_zlabel("Energy (Repulsion)", labelpad=5)
-        
-        ax_loc.xaxis.pane.fill = False
-        ax_loc.yaxis.pane.fill = False
-        ax_loc.zaxis.pane.fill = False
-        
-        # Adjusted viewing angle to peer into the rugged valley
-        ax_loc.view_init(elev=45, azim=-120)
-        
-        cbar = fig_loc.colorbar(surf, ax=ax_loc, shrink=0.4, aspect=15, pad=0.1)
-        cbar.set_label('Potential Energy Barrier', rotation=270, labelpad=15)
-        
-        st.pyplot(fig_loc)
+        # Render interactive Plotly chart in Streamlit
+        st.plotly_chart(fig_loc, use_container_width=True)
 
     st.markdown("""
-    By comparing the physical matrix (left) to the computed energy landscape (right), you can clearly see how irregular polymer packing dictates the positron's destination. The positron is repelled by the dense ridges of the molecular backbone and naturally flows down into the deep, low-energy basin formed by the structural void.
+    By comparing the physical matrix (left) to the computed energy landscape (right), you can clearly see how irregular polymer packing dictates the positron's destination. The positron is repelled by the dense ridges of the molecular backbone and naturally flows down into the deep, low-energy basin formed by the structural void. *(You can click and drag the 3D plot to rotate the energy landscape).*
     """)
 
     st.markdown("""
