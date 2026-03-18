@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import erfc
 import matplotlib.patches as patches
+import scipy.ndimage
 
 # --- App Configuration ---
 st.set_page_config(page_title="Positron Annihilation Explorer", layout="wide")
