@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.special import erfc
 import matplotlib.patches as patches
 import scipy.ndimage
+import plotly.graph_objects as go
 
 # --- App Configuration ---
 st.set_page_config(page_title="Positron Annihilation Explorer", layout="wide")
