@@ -229,135 +229,125 @@ with tab2:
     st.markdown("""
     As seen in the 3D landscape above, the positron avoids the bright yellow/orange peaks (the dense polyacrylic chains) and rolls down into the dark purple valley (the physical void). Once localized at the bottom of this potential energy well, it is ready for Step 2: forming Positronium.
     """)
-    # ==========================================
-    # STEP 2: Positronium Formation
-    # ==========================================
+    # # ==========================================
+# STEP 2: Positronium Formation
+# ==========================================
+st.header("Step 2: Capturing a Partner & Forming Positronium")
+
+st.markdown(r"""
+Once isolated in a free volume cavity, the thermalized positron ($e^+$) doesn't stay alone for long. It exerts a powerful **Coulomb attraction** on the electrons ($e^-$) in the surrounding "spur" (the track of ionization it left behind). 
+
+Unlike a standard Hydrogen atom where an electron orbits a heavy, stationary proton, Positronium consists of two particles with **identical mass**. They "find" each other and begin orbiting a mutual center of mass, like a binary star system.
+""")
+
+# ---------------------------------------------------------
+# NEW VISUALIZATION: The Capture Mechanism (2D Interaction)
+# ---------------------------------------------------------
+st.subheader("The Capture Process: Coulomb Attraction")
+
+# Generate a "spiraling in" capture path
+t_capture = np.linspace(0, 10, 100)
+# Positron spirals from top-right
+pos_x = 2 * np.exp(-0.2 * t_capture) * np.cos(t_capture) + 0.5
+pos_y = 2 * np.exp(-0.2 * t_capture) * np.sin(t_capture) + 0.5
+# Electron spirals from bottom-left
+ele_x = -2 * np.exp(-0.2 * t_capture) * np.cos(t_capture) - 0.5
+ele_y = -2 * np.exp(-0.2 * t_capture) * np.sin(t_capture) - 0.5
+
+fig_capture = go.Figure()
+
+# Draw the Free Volume Void Boundary
+fig_capture.add_shape(type="circle", x0=-3, y0=-3, x1=3, y1=3, 
+                      line_color="gray", line_dash="dash", fillcolor="rgba(255, 255, 255, 0.05)")
+
+# Draw trajectories
+fig_capture.add_trace(go.Scatter(x=pos_x, y=pos_y, mode='lines', name='Positron Path', line=dict(color='#2ed573', width=3)))
+fig_capture.add_trace(go.Scatter(x=ele_x, y=ele_y, mode='lines', name='Electron Path', line=dict(color='#1e90ff', width=3)))
+
+# Particle heads
+fig_capture.add_trace(go.Scatter(x=[pos_x[-1]], y=[pos_y[-1]], mode='markers', marker=dict(color='#ff4757', size=15), name='Positron (e+)'))
+fig_capture.add_trace(go.Scatter(x=[ele_x[-1]], y=[ele_y[-1]], mode='markers', marker=dict(color='#4a69bd', size=15), name='Electron (e-)'))
+
+# Add "Attraction" Force Vectors
+fig_capture.add_annotation(x=pos_x[20], y=pos_y[20], ax=ele_x[20], ay=ele_y[20], xref="x", yref="y", axref="x", ayref="y",
+                           text="", showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor="white", opacity=0.5)
+
+fig_capture.update_layout(
+    height=450,
+    plot_bgcolor='#1e272e',
+    paper_bgcolor='#1e272e',
+    xaxis=dict(showgrid=False, zeroline=False, visible=False, range=[-4, 4]),
+    yaxis=dict(showgrid=False, zeroline=False, visible=False, range=[-4, 4]),
+    title="Positron ($e^+$) and Electron ($e^-$) Convergence in the Void",
+    legend=dict(font=dict(color="white"), bgcolor="rgba(0,0,0,0)")
+)
+
+st.plotly_chart(fig_capture, use_container_width=True)
+
+st.markdown(r"""
+
+After this capture, the resulting atom enters one of two quantum spin states. This distinction is the fundamental basis of **PALS** (Positron Annihilation Lifetime Spectroscopy):
+""")
+
+st.markdown("---")
+
+# ---------------------------------------------------------
+# EXISTING VISUALIZATION: Spin States (Corrected Syntax)
+# ---------------------------------------------------------
+col1, col2 = st.columns(2)
+
+# Orbit logic for the 3D plots
+theta = np.linspace(0, 2 * np.pi, 100)
+orbit_x = np.cos(theta)
+orbit_y = np.sin(theta)
+orbit_z = np.zeros_like(theta)
+
+def create_ps_figure(is_ortho):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter3d(x=orbit_x, y=orbit_y, z=orbit_z, mode='lines', line=dict(color='gray', dash='dash', width=3)))
+    fig.add_trace(go.Scatter3d(x=[0], y=[0], z=[0], mode='markers', marker=dict(size=4, color='white', symbol='cross')))
     
-    st.markdown("""
-    ### Step 2: Capturing a Partner & Forming Positronium
-    Once isolated in a free volume cavity, the thermalized positron ($e^+$) captures a loose electron ($e^-$) from the surrounding polymer matrix. Because they have equal but opposite electric charges, they bind together via Coulomb attraction to form a metastable, hydrogen-like exotic atom called **Positronium (Ps)**. 
+    # Positron
+    fig.add_trace(go.Scatter3d(x=[1], y=[0], z=[0], mode='markers', marker=dict(size=14, color='#ff4757')))
+    fig.add_trace(go.Scatter3d(x=[1, 1], y=[0, 0], z=[0, 0.8], mode='lines', line=dict(color='#ff4757', width=6)))
+    fig.add_trace(go.Cone(x=[1], y=[0], z=[0.8], u=[0], v=[0], w=[0.5], sizeref=0.3, showscale=False, colorscale=[[0, '#ff4757'], [1, '#ff4757']]))
+
+    # Electron
+    z_end = 0.8 if is_ortho else -0.8
+    cone_w = 0.5 if is_ortho else -0.5
+    fig.add_trace(go.Scatter3d(x=[-1], y=[0], z=[0], mode='markers', marker=dict(size=14, color='#4a69bd')))
+    fig.add_trace(go.Scatter3d(x=[-1, -1], y=[0, 0], z=[0, z_end], mode='lines', line=dict(color='#4a69bd', width=6)))
+    fig.add_trace(go.Cone(x=[-1], y=[0], z=[z_end], u=[0], v=[0], w=[cone_w], sizeref=0.3, showscale=False, colorscale=[[0, '#4a69bd'], [1, '#4a69bd']]))
+
+    fig.update_layout(
+        scene=dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False), camera=dict(eye=dict(x=0, y=-1.8, z=0.6))),
+        height=350, margin=dict(l=0, r=0, b=0, t=0), showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
+    )
+    return fig
+
+with col1:
+    st.subheader("Para-Positronium (p-Ps)")
+    st.plotly_chart(create_ps_figure(is_ortho=False), use_container_width=True)
+    st.markdown(r"""
+    * **Spin Alignment:** Anti-parallel ($\uparrow \downarrow$)
+    * **Total Spin:** $S = 0$ (Singlet)
+    * **Formation Probability:** 25%
+    * **Vacuum Lifetime:** ~0.125 ns
     
-    Unlike standard Hydrogen (which has a heavy proton fixed in the center), the electron and positron have the exact same mass. Therefore, they orbit around their mutual center of mass, exactly like a binary star system. The radius of this orbit is twice that of a normal hydrogen atom.
-    
-    Depending on how the quantum spins of the two particles align upon capture, Positronium forms in one of two distinct states. This distinction is the fundamental basis of Positron Annihilation Lifetime Spectroscopy (PALS):
+    The opposite spins allow for rapid self-annihilation. It disappears almost instantly, making it a poor probe for cavity size.
     """)
+
+with col2:
+    st.subheader("Ortho-Positronium (o-Ps)")
+    st.plotly_chart(create_ps_figure(is_ortho=True), use_container_width=True)
+    st.markdown(r"""
+    * **Spin Alignment:** Parallel ($\uparrow \uparrow$)
+    * **Total Spin:** $S = 1$ (Triplet)
+    * **Formation Probability:** 75%
+    * **Vacuum Lifetime:** ~142 ns
     
-    st.markdown("---")
-    
-    col1, col2 = st.columns(2)
-    
-    # Generate Orbit Coordinates
-    theta = np.linspace(0, 2 * np.pi, 100)
-    orbit_x = np.cos(theta)
-    orbit_y = np.sin(theta)
-    orbit_z = np.zeros_like(theta)
-    
-    def create_ps_figure(is_ortho):
-        fig = go.Figure()
-    
-        # Mutual Orbit Path
-        fig.add_trace(go.Scatter3d(
-            x=orbit_x, y=orbit_y, z=orbit_z, 
-            mode='lines', 
-            line=dict(color='gray', dash='dash', width=3), 
-            name='Mutual Orbit'
-        ))
-    
-        # Center of Mass
-        fig.add_trace(go.Scatter3d(
-            x=[0], y=[0], z=[0], 
-            mode='markers', 
-            marker=dict(size=4, color='white', symbol='cross'), 
-            name='Center of Mass'
-        ))
-    
-        # Positron (Red)
-        fig.add_trace(go.Scatter3d(
-            x=[1], y=[0], z=[0], 
-            mode='markers', 
-            marker=dict(size=14, color='#ff4757'), 
-            name='Positron (e+)'
-        ))
-        # Positron Spin Vector (Always Up)
-        fig.add_trace(go.Scatter3d(
-            x=[1, 1], y=[0, 0], z=[0, 0.8], 
-            mode='lines', 
-            line=dict(color='#ff4757', width=6), 
-            showlegend=False
-        ))
-        fig.add_trace(go.Cone(
-            x=[1], y=[0], z=[0.8], 
-            u=[0], v=[0], w=[0.5], 
-            sizeref=0.3, showscale=False, 
-            colorscale=[[0, '#ff4757'], [1, '#ff4757']]
-        ))
-    
-        # Electron (Blue)
-        fig.add_trace(go.Scatter3d(
-            x=[-1], y=[0], z=[0], 
-            mode='markers', 
-            marker=dict(size=14, color='#4a69bd'), 
-            name='Electron (e-)'
-        ))
-        
-        # Electron Spin Vector (Up for Ortho, Down for Para)
-        if is_ortho:
-            z_start, z_end, cone_w = 0, 0.8, 0.5
-        else:
-            z_start, z_end, cone_w = 0, -0.8, -0.5
-            
-        fig.add_trace(go.Scatter3d(
-            x=[-1, -1], y=[0, 0], z=[z_start, z_end], 
-            mode='lines', 
-            line=dict(color='#4a69bd', width=6), 
-            showlegend=False
-        ))
-        fig.add_trace(go.Cone(
-            x=[-1], y=[0], z=[z_end], 
-            u=[0], v=[0], w=[cone_w], 
-            sizeref=0.3, showscale=False, 
-            colorscale=[[0, '#4a69bd'], [1, '#4a69bd']]
-        ))
-    
-        # Format Scene
-        fig.update_layout(
-            scene=dict(
-                xaxis=dict(range=[-2, 2], showgrid=False, visible=False),
-                yaxis=dict(range=[-2, 2], showgrid=False, visible=False),
-                zaxis=dict(range=[-2, 2], showgrid=False, visible=False),
-                camera=dict(eye=dict(x=0, y=-1.8, z=0.6))
-            ),
-            height=350,
-            margin=dict(l=0, r=0, b=0, t=0),
-            showlegend=False
-        )
-        return fig
-    
-    # --- LEFT COLUMN: Para-Positronium ---
-    with col1:
-        st.subheader("Para-Positronium (p-Ps)")
-        st.plotly_chart(create_ps_figure(is_ortho=False), use_container_width=True)
-        st.markdown(r"""
-        * **Spin Alignment:** Anti-parallel ($\uparrow \downarrow$)
-        * **Total Spin:** $S = 0$ (Singlet state)
-        * **Formation Probability:** 25%
-        * **Vacuum Lifetime:** ~0.125 ns
-        
-        Because the spins cancel out, p-Ps is highly unstable. It quickly self-annihilates into two gamma rays. Its lifetime is too short to effectively probe polymer cavities.
-        """)
-    
-    # --- RIGHT COLUMN: Ortho-Positronium ---
-    with col2:
-        st.subheader("Ortho-Positronium (o-Ps)")
-        st.plotly_chart(create_ps_figure(is_ortho=True), use_container_width=True)
-        st.markdown(r"""
-        * **Spin Alignment:** Parallel ($\uparrow \uparrow$)
-        * **Total Spin:** $S = 1$ (Triplet state)
-        * **Formation Probability:** 75%
-        * **Vacuum Lifetime:** ~142 ns
-        
-        Because the spins are aligned, self-annihilation requires emitting three gamma rays, a rare quantum event. **This extended lifetime allows o-Ps to act as a probe for measuring free volume.**
-        """)
+    The parallel spins forbid simple two-photon decay. Its **extended lifetime** allows it to bounce off cavity walls thousands of times, becoming our "measuring stick."
+    """)
     st.markdown("""
     ### Step 3: The Rules of Spin
     Both the electron and the positron are fermions, meaning they each possess an intrinsic angular momentum, or "spin", of $s = 1/2$. When these two particles bind together, quantum mechanics dictates that their spins must combine. 
