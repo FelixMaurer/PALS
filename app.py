@@ -55,111 +55,74 @@ with tab2:
 
     st.markdown("""
     ### Step 1: Seeking the Void (Localization)
-    After the positron has lost most of its kinetic energy during thermalization, it drifts through the dense polymer matrix. The core electron clouds of the polyacrylic chains create strong atomic exchange repulsive forces. Seeking the path of least resistance, the positron is naturally pushed away from the bulk material and funneled into the microscopic empty spaces—the **free volume cavities**—between the molecular chains. 
+    As the positron loses its kinetic energy and reaches thermal equilibrium, it must figure out where to "settle" within the polyacrylic matrix. It does not just stop randomly; its final location is strictly dictated by the microscopic forces of the polymer.
 
-    ### Step 2: Capturing a Partner 
-    Once isolated in a cavity (or while transitioning into one), the positron ($e^+$) captures a loose electron ($e^-$) from the surrounding polymer. Because they have equal but opposite electric charges, they bind together via Coulomb attraction to form a metastable, hydrogen-like atom called **Positronium (Ps)**. 
+    **The Repulsive Landscape:** A polymer is a tangled mess of long molecular chains. These chains consist of dense, positively charged atomic nuclei (Carbon, Oxygen, Hydrogen) surrounded by tightly bound electron clouds. 
     
-    Unlike standard Hydrogen (which has a heavy proton fixed in the center), the electron and positron have the exact same mass. Therefore, they orbit around their mutual center of mass, like a binary star system.
+    Even though the positron is positively charged and theoretically attracted to electrons, it experiences massive **Coulomb repulsion** from the positive atomic cores of the polymer. Furthermore, once it begins to capture an electron to form Positronium, the newly formed atom experiences strong **exchange repulsion** (due to the Pauli exclusion principle) from the bulk electrons of the polymer chains.
 
-    ### Step 3: The Rules of Spin
-    Both the electron and the positron are fermions, meaning they each possess an intrinsic angular momentum, or "spin", of $s = 1/2$. When these two particles bind together, quantum mechanics dictates that their spins must combine. 
-    
-    Because spin is a vector, these two $1/2$ spins can either point in opposite directions (canceling out) or point in the same direction (adding together). This creates two fundamentally different "species" of Positronium.
+    **The Free Volume Cavity:**
+    Because of this intense repulsion, the polymer chains act like towering "hills" of high potential energy. Seeking the lowest possible energy state, the positron is naturally funneled away from the molecular backbone and pushed into the microscopic empty spaces—the **free volume cavities**—created by the irregular, twisted packing of the polyacrylic chains. 
     """)
     
-    st.divider()
-    st.markdown("### Step 4: The Two Quantum States (Singlet vs. Triplet)")
+    # --- Visualization of Localization Landscape ---
+    st.subheader("Visualizing the Potential Energy Landscape")
+    
+    fig_loc, ax_loc = plt.subplots(figsize=(10, 6))
+    
+    # Generate a synthetic potential energy landscape
+    np.random.seed(45)
+    x_grid = np.linspace(0, 10, 100)
+    y_grid = np.linspace(0, 10, 100)
+    X, Y = np.meshgrid(x_grid, y_grid)
+    
+    # Create polymer chains as regions of high potential energy (sum of Gaussians)
+    Z = np.zeros_like(X)
+    num_atoms = 30
+    for _ in range(num_atoms):
+        x_c = np.random.uniform(-1, 11)
+        y_c = np.random.uniform(-1, 11)
+        # Gaussian representing atomic repulsion
+        Z += 3.0 * np.exp(-((X - x_c)**2 + (Y - y_c)**2) / 1.5)
+    
+    # Plot the contour
+    contour = ax_loc.contourf(X, Y, Z, levels=20, cmap='YlGnBu_r', alpha=0.8)
+    cbar = fig_loc.colorbar(contour, ax=ax_loc)
+    cbar.set_label('Potential Energy / Repulsive Force', rotation=270, labelpad=15)
+    
+    # Annotate the landscape
+    ax_loc.text(1, 9, "High Energy\n(Polymer Chains)", color='white', fontweight='bold', fontsize=10)
+    
+    # Find the deepest cavity (minimum potential) to trap the positron
+    min_idx = np.unravel_index(np.argmin(Z, axis=None), Z.shape)
+    cavity_x = x_grid[min_idx[1]]
+    cavity_y = y_grid[min_idx[0]]
+    
+    # Draw the localization path
+    # Positron starts at a random high-energy edge and rolls into the cavity
+    start_x, start_y = 8.0, 8.0
+    path_x = [start_x, 7.5, 6.0, 5.0, 4.5, cavity_x]
+    path_y = [start_y, 6.5, 5.0, 3.5, 2.5, cavity_y]
+    
+    ax_loc.plot(path_x, path_y, 'w--', linewidth=2, label="Positron Localization Path")
+    ax_loc.plot(start_x, start_y, 'go', markersize=8, label="Thermalized Positron")
+    ax_loc.plot(cavity_x, cavity_y, 'r*', markersize=15, label="Trapped inside Free Volume Void")
+    
+    # Add an outline to the cavity
+    circle = plt.Circle((cavity_x, cavity_y), 1.2, color='red', fill=False, linestyle=':', linewidth=2)
+    ax_loc.add_patch(circle)
+    ax_loc.text(cavity_x, cavity_y + 1.5, "Deepest Void", color='red', ha='center', fontweight='bold')
+    
+    ax_loc.set_title("Positron Funneled into a Polymer Free Volume Cavity")
+    ax_loc.set_xlabel("Nanometers (nm)")
+    ax_loc.set_ylabel("Nanometers (nm)")
+    ax_loc.legend(loc="upper right", facecolor='lightgray', framealpha=0.9)
+    
+    st.pyplot(fig_loc)
 
-    # Quantum Parameters Comparison
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info("""
-        ### Para-Positronium (p-Ps)
-        **The Singlet State**
-        
-        When the spins are anti-parallel, they cancel each other out. There is only one unique mathematical way for this to happen, hence the name "Singlet".
-        
-        * **Spin Alignment:** Anti-Parallel ($\\uparrow \\downarrow$)
-        * **Total Spin ($S$):** $1/2 - 1/2 = 0$
-        * **Magnetic Quantum Number ($m_s$):** 0
-        * **Orbital Angular Momentum ($L$):** 0 (Ground state)
-        * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
-        * **Charge Parity ($C = (-1)^{L+S}$):** +1 (Even)
-        * **Vacuum Lifetime:** ~125 ps
-        * **Formation Probability:** 25% (1 out of 4 possible spin states)
-        """)
-    with col2:
-        st.warning("""
-        ### Ortho-Positronium (o-Ps)
-        **The Triplet State**
-        
-        When the spins are parallel, they add up. Because a total spin of 1 can orient itself in three different ways relative to an external axis (down, flat, or up), it is called a "Triplet".
-        
-        * **Spin Alignment:** Parallel ($\\uparrow \\uparrow$)
-        * **Total Spin ($S$):** $1/2 + 1/2 = 1$
-        * **Magnetic Quantum Number ($m_s$):** -1, 0, or +1
-        * **Orbital Angular Momentum ($L$):** 0 (Ground state)
-        * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
-        * **Charge Parity ($C = (-1)^{L+S}$):** -1 (Odd)
-        * **Vacuum Lifetime:** ~142 ns
-        * **Formation Probability:** 75% (3 out of 4 possible spin states)
-        """)
-
-    st.divider()
     st.markdown("""
-    ### Step 5: Hyperfine Splitting
-    Because the electron and positron are spinning, they act like tiny bar magnets. In the Triplet state (o-Ps), the "magnets" are aligned, which creates a slightly repulsive magnetic interaction. In the Singlet state (p-Ps), the opposite alignment is magnetically attractive. 
-    
-    This magnetic spin-spin interaction causes a slight difference in their energy levels, known as **Hyperfine Splitting**. Ortho-positronium sits at a slightly higher energy level than para-positronium.
+    As seen in the contour plot above, the positron avoids the dark blue areas (the dense polyacrylic chains) and settles into the bright yellow areas (the physical voids). Once localized in the bottom of this potential energy "well", it is ready for Step 2: forming Positronium.
     """)
-    
-    fig_ps, (ax_split, ax_spin) = plt.subplots(1, 2, figsize=(12, 5))
-    
-    # Left Panel: Energy Splitting
-    ax_split.set_title("Hyperfine Energy Splitting")
-    ax_split.axis('off')
-    ax_split.set_xlim(0, 5)
-    ax_split.set_ylim(-1, 3)
-    
-    # Energy levels
-    ax_split.hlines(0, 1, 2, color='black', linestyles='dashed')
-    ax_split.text(0.5, 0, "Unperturbed\nGround State", va='center')
-    
-    ax_split.hlines(1.5, 3, 4, color='orange', linewidth=3)
-    ax_split.text(4.2, 1.5, "Triplet (o-Ps)\nS=1", va='center')
-    
-    ax_split.hlines(-0.5, 3, 4, color='blue', linewidth=3)
-    ax_split.text(4.2, -0.5, "Singlet (p-Ps)\nS=0", va='center')
-    
-    # Splitting lines
-    ax_split.plot([2, 3], [0, 1.5], 'k--', alpha=0.5)
-    ax_split.plot([2, 3], [0, -0.5], 'k--', alpha=0.5)
-    
-    # Energy difference text
-    ax_split.annotate(r'$\Delta E \approx 8.4 \times 10^{-4}$ eV', xy=(3.5, 0.5), ha='center', color='red', fontsize=10)
-    
-    # Right Panel: Spin Alignment Sketch
-    ax_spin.set_title("Spin Alignments in Ground State")
-    ax_spin.axis('off')
-    ax_spin.set_xlim(-2, 2)
-    ax_spin.set_ylim(-2, 2)
-    
-    # Para
-    ax_spin.text(-1, 1.2, "Para-Ps (Anti-Parallel)", ha='center', fontweight='bold')
-    ax_spin.plot(-1.3, 0, 'ro', markersize=20, alpha=0.7) # Positron
-    ax_spin.plot(-0.7, 0, 'bo', markersize=20, alpha=0.7) # Electron
-    ax_spin.arrow(-1.3, -0.3, 0, 0.6, head_width=0.1, color='black', lw=2) # Spin Up
-    ax_spin.arrow(-0.7, 0.3, 0, -0.6, head_width=0.1, color='black', lw=2) # Spin Down
-    
-    # Ortho
-    ax_spin.text(1, 1.2, "Ortho-Ps (Parallel)", ha='center', fontweight='bold')
-    ax_spin.plot(0.7, 0, 'ro', markersize=20, alpha=0.7) # Positron
-    ax_spin.plot(1.3, 0, 'bo', markersize=20, alpha=0.7) # Electron
-    ax_spin.arrow(0.7, -0.3, 0, 0.6, head_width=0.1, color='black', lw=2) # Spin Up
-    ax_spin.arrow(1.3, -0.3, 0, 0.6, head_width=0.1, color='black', lw=2) # Spin Up
-    
-    st.pyplot(fig_ps)
 
 # ==========================================
 # TAB 3: The Triplet State (Decay Rules)
