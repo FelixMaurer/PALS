@@ -62,6 +62,70 @@ with tab2:
     with col2:
         st.warning("**Ortho-positronium (o-Ps)** \n\n* Triplet state \n* Parallel spins (S=1) \n* Vacuum lifetime: ~142 ns \n* Trapped in polymer cavities.")
 
+    st.divider()
+    st.subheader("Visualizing Positronium and its Path in a Cavity")
+    
+    # Generate the dual-panel sketch for Positronium
+    fig_ps, (ax_ps1, ax_ps2) = plt.subplots(1, 2, figsize=(12, 5))
+    
+    # --- Left Panel: Positronium Bound State ---
+    ax_ps1.set_title("Positronium (Ps) Bound State")
+    ax_ps1.axis('off')
+    ax_ps1.set_xlim(-1.5, 1.5)
+    ax_ps1.set_ylim(-1.5, 1.5)
+    
+    # Orbit
+    circle = plt.Circle((0, 0), 1, color='gray', fill=False, linestyle='--', alpha=0.5)
+    ax_ps1.add_patch(circle)
+    
+    # Particles
+    ax_ps1.plot(1, 0, 'bo', markersize=15, label='Electron ($e^-$)')
+    ax_ps1.plot(-1, 0, 'ro', markersize=15, label='Positron ($e^+$)')
+    
+    # Spins (Showing Ortho-Ps with parallel spins)
+    ax_ps1.arrow(1, 0.2, 0, 0.3, head_width=0.08, color='blue', lw=2, length_includes_head=True)
+    ax_ps1.arrow(-1, 0.2, 0, 0.3, head_width=0.08, color='red', lw=2, length_includes_head=True)
+    ax_ps1.text(0, -1.3, "Ortho-Positronium (Parallel Spins)", ha='center', fontsize=11, fontweight='bold')
+    ax_ps1.legend(loc='upper right', fontsize='small')
+    
+    # --- Right Panel: Bouncing in Cavity ---
+    ax_ps2.set_title("o-Ps Path in Polymer Free Volume")
+    ax_ps2.axis('off')
+    ax_ps2.set_xlim(-1.5, 1.5)
+    ax_ps2.set_ylim(-1.5, 1.5)
+    
+    # Polymer Cavity Wall
+    cavity = plt.Circle((0, 0), 1.2, color='lightblue', fill=True, alpha=0.4)
+    ax_ps2.add_patch(cavity)
+    ax_ps2.text(0, 1.3, "Polymer Chains (Electron Dense)", ha='center', color='darkblue', fontsize=10)
+    
+    # Generate bouncing path for the neutral Ps atom
+    np.random.seed(101) # Seed for reproducible random path
+    num_bounces = 6
+    angles = np.random.uniform(0, 2*np.pi, num_bounces)
+    r_cavity = 1.2
+    
+    # Start near the center of the cavity
+    path_x, path_y = [0.1], [-0.1]
+    
+    # Calculate chord points for bounces
+    for angle in angles:
+        path_x.append(r_cavity * np.cos(angle))
+        path_y.append(r_cavity * np.sin(angle))
+        
+    ax_ps2.plot(path_x, path_y, 'k--', linewidth=1.5, alpha=0.6)
+    ax_ps2.plot(path_x[0], path_y[0], 'go', markersize=8, label="Ps Formation")
+    
+    # Add dots for wall bounces
+    ax_ps2.plot(path_x[1:-1], path_y[1:-1], 'ko', markersize=4, alpha=0.5)
+    
+    # The final point is the pick-off annihilation
+    ax_ps2.plot(path_x[-1], path_y[-1], 'r*', markersize=18, label="Pick-off Annihilation")
+    
+    ax_ps2.legend(loc='lower left', fontsize='small')
+    
+    st.pyplot(fig_ps)
+
 # ==========================================
 # TAB 3: The Triplet State (Decay Rules)
 # ==========================================
