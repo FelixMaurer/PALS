@@ -64,31 +64,71 @@ with tab2:
     
     st.markdown("---")
     
-    # Create two columns for side-by-side comparison
     col1, col2 = st.columns(2)
     
-    # Pre-calculate shared coordinates so the path matches exactly in both plots
+    # ---------------------------------------------------------
+    # Generate a Realistic Semi-Crystalline Polymer Matrix
+    # ---------------------------------------------------------
+    np.random.seed(42)
+    chains = []
+    
+    # 1. Left Crystalline Lamellae (Ordered folded chains)
+    for x_base in np.linspace(1.0, 3.5, 4):
+        cx, cy = [], []
+        for y_base in np.linspace(0.5, 9.5, 40):
+            cx.append(x_base + 0.08 * np.sin(y_base * 15)) # Polymer backbone zig-zag
+            cy.append(y_base)
+        chains.append((cx, cy))
+        
+    # 2. Right Crystalline Lamellae
+    for x_base in np.linspace(6.5, 9.0, 4):
+        cx, cy = [], []
+        for y_base in np.linspace(0.5, 9.5, 40):
+            cx.append(x_base + 0.08 * np.sin(y_base * 15))
+            cy.append(y_base)
+        chains.append((cx, cy))
+        
+    # 3. Disordered Amorphous Region (Leaving a central void)
+    # Top bridging chains
+    for _ in range(4):
+        cx = np.linspace(3.5, 6.5, 15)
+        cy = 8.5 + np.random.normal(0, 0.4, 15)
+        chains.append((cx, cy))
+    # Bottom bridging chains
+    for _ in range(4):
+        cx = np.linspace(3.5, 6.5, 15)
+        cy = 1.5 + np.random.normal(0, 0.4, 15)
+        chains.append((cx, cy))
+
+    # Flatten coordinates to compute the energy landscape
+    all_px, all_py = [], []
+    for cx, cy in chains:
+        all_px.extend(cx)
+        all_py.extend(cy)
+
+    # ---------------------------------------------------------
+    # Compute Energy Landscape based STRICTLY on chain proximity
+    # ---------------------------------------------------------
     x_grid = np.linspace(0, 10, 100)
     y_grid = np.linspace(0, 10, 100)
     X, Y = np.meshgrid(x_grid, y_grid)
+    Z = np.zeros_like(X)
     
-    # Landscape generation (needed for both to find the exact cavity center)
-    Z = np.ones_like(X) * 6.0 
-    Z -= 5.5 * np.exp(-((X - 5)**2 + (Y - 5)**2) / 6.0)
-    
-    np.random.seed(42)
-    for _ in range(15):
-        xc = np.random.uniform(0, 10)
-        yc = np.random.uniform(0, 10)
-        Z += 3.0 * np.exp(-((X - xc)**2 + (Y - yc)**2) / 1.5)
+    # Sum the repulsive potentials (Gaussian approximation of atomic repulsion)
+    for px, py in zip(all_px, all_py):
+        Z += 0.45 * np.exp(-((X - px)**2 + (Y - py)**2) / 0.5)
         
-    Z = np.clip(Z, 0, 10)
+    # Add a small baseline energy and cap maximum repulsion
+    Z += 0.5
+    Z = np.clip(Z, 0, 7)
+    
+    # Find the deepest part of the free volume cavity
     min_idx = np.unravel_index(np.argmin(Z), Z.shape)
     cavity_x, cavity_y, cavity_z = X[min_idx], Y[min_idx], Z[min_idx]
     
-    # Positron Path
-    path_t = np.linspace(0, 1, 20)
-    start_x, start_y = 8.5, 1.5
+    # Calculate Positron Path (from a high-density area into the void)
+    path_t = np.linspace(0, 1, 25)
+    start_x, start_y = 8.5, 5.0 # Starting in the right-side crystal
     path_x = start_x + (cavity_x - start_x) * path_t
     path_y = start_y + (cavity_y - start_y) * path_t
     
@@ -96,39 +136,30 @@ with tab2:
     # LEFT COLUMN: Physical Crystal Structure
     # ==========================================
     with col1:
-        st.subheader("1. Physical Polymer Matrix")
+        st.subheader("1. Semi-Crystalline Matrix")
         
         fig_struct, ax_struct = plt.subplots(figsize=(6, 6))
         
-        # Simulate semi-crystalline polymer chains with a void defect in the center
-        for x_chain in np.linspace(1, 9, 9):
-            if x_chain in [4.0, 5.0, 6.0]:
-                # Leave a gap in the middle chains to represent the free volume
-                y1 = np.linspace(0, 3.5, 15)
-                y2 = np.linspace(6.5, 10, 15)
-                ax_struct.plot([x_chain]*len(y1), y1, 'o-', color='#4a69bd', markersize=6, alpha=0.7, linewidth=2)
-                ax_struct.plot([x_chain]*len(y2), y2, 'o-', color='#4a69bd', markersize=6, alpha=0.7, linewidth=2)
-            else:
-                y = np.linspace(0, 10, 40)
-                ax_struct.plot([x_chain]*len(y), y, 'o-', color='#4a69bd', markersize=6, alpha=0.7, linewidth=2)
+        # Plot the polymer chains
+        for cx, cy in chains:
+            ax_struct.plot(cx, cy, 'o-', color='#4a69bd', markersize=4, alpha=0.8, linewidth=1.5)
 
         # Plot the positron path
         ax_struct.plot(path_x, path_y, color='white', linestyle='--', linewidth=2.5, label="Positron Path")
         ax_struct.scatter(path_x[0], path_y[0], color='#2ed573', s=150, zorder=5, label="Thermalized Positron")
         ax_struct.scatter(cavity_x, cavity_y, color='#ff4757', s=250, marker='*', zorder=5, label="Trapped in Void")
         
-        ax_struct.set_facecolor('#1e272e') # Dark background to make path pop
+        ax_struct.set_facecolor('#1e272e') 
         ax_struct.set_xlim(0, 10)
         ax_struct.set_ylim(0, 10)
         ax_struct.set_xlabel("X (nm)")
         ax_struct.set_ylabel("Y (nm)")
-        ax_struct.grid(False)
-        ax_struct.legend(loc="upper left", facecolor='black', labelcolor='white', framealpha=0.7)
+        ax_struct.legend(loc="lower left", facecolor='black', labelcolor='white', framealpha=0.7)
         
         st.pyplot(fig_struct)
 
     # ==========================================
-    # RIGHT COLUMN: Potential Energy Landscape
+    # RIGHT COLUMN: Computed Energy Landscape
     # ==========================================
     with col2:
         st.subheader("2. Resulting Energy Landscape")
@@ -137,35 +168,34 @@ with tab2:
         ax_loc = fig_loc.add_subplot(111, projection='3d')
         
         # Plot the 3D surface
-        surf = ax_loc.plot_surface(X, Y, Z, cmap='plasma', alpha=0.85, linewidth=0, antialiased=True)
+        surf = ax_loc.plot_surface(X, Y, Z, cmap='plasma', alpha=0.9, linewidth=0, antialiased=True)
         
-        # Calculate Z heights along the path with a slight hover effect
-        path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.3
+        # Map the 2D path onto the 3D Z-coordinates with a slight hover
+        path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.2
         
         # Plot the path and particles
         ax_loc.plot(path_x, path_y, path_z, color='white', linestyle='--', linewidth=2, label="Positron Path")
-        ax_loc.scatter(path_x[0], path_y[0], path_z[0], color='#2ed573', s=100, label="Thermalized Positron")
-        ax_loc.scatter(cavity_x, cavity_y, cavity_z + 0.2, color='#ff4757', s=150, marker='*', label="Trapped")
+        ax_loc.scatter(path_x[0], path_y[0], path_z[0], color='#2ed573', s=100, zorder=10)
+        ax_loc.scatter(cavity_x, cavity_y, cavity_z + 0.2, color='#ff4757', s=150, marker='*', zorder=10)
         
         # Formatting the 3D plot
         ax_loc.set_xlabel("X (nm)", labelpad=5)
         ax_loc.set_ylabel("Y (nm)", labelpad=5)
-        ax_loc.set_zlabel("Energy / Repulsion", labelpad=5)
+        ax_loc.set_zlabel("Energy (Repulsion)", labelpad=5)
         
         ax_loc.xaxis.pane.fill = False
         ax_loc.yaxis.pane.fill = False
         ax_loc.zaxis.pane.fill = False
         
-        ax_loc.view_init(elev=35, azim=-125)
+        ax_loc.view_init(elev=40, azim=-115)
         
-        # Adjusted colorbar size for the column layout
         cbar = fig_loc.colorbar(surf, ax=ax_loc, shrink=0.4, aspect=15, pad=0.1)
-        cbar.set_label('Energy Barrier', rotation=270, labelpad=15)
+        cbar.set_label('Potential Energy Barrier', rotation=270, labelpad=15)
         
         st.pyplot(fig_loc)
 
     st.markdown("""
-    As seen by comparing the physical matrix (left) to the energy landscape (right), the positron avoids the dense atomic chains (the bright yellow/orange peaks) and rolls down into the physical void (the dark purple valley). Once localized at the bottom of this potential energy well, it is ready for Step 2: forming Positronium.
+    By comparing the physical matrix (left) to the computed energy landscape (right), you can see how the dense crystalline chains create high-energy barriers (bright peaks), while the structural defect in the center forms a natural low-energy basin (dark valley). The positron is repelled by the atomic cores and funneled directly into this free volume void.
     """)
 
     st.markdown("""
