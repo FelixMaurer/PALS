@@ -229,87 +229,103 @@ with tab2:
     st.markdown("""
     As seen in the 3D landscape above, the positron avoids the bright yellow/orange peaks (the dense polyacrylic chains) and rolls down into the dark purple valley (the physical void). Once localized at the bottom of this potential energy well, it is ready for Step 2: forming Positronium.
     """)
-# # ==========================================
+# ==========================================
 # STEP 2: Capturing a Partner (The Spur Model)
 # ==========================================
 st.header("Step 2: Capturing a Partner & Forming Positronium")
 
 st.markdown(r"""
-### Where does the electron come from?
-In polymers, Positronium formation is described by the **Spur Model**. As the energetic positron ($e^+$) shoots into the material, it loses energy by ionizing polymer molecules, leaving behind a "spur" of freed **Spur Electrons** ($e^-$). 
+### The "Random Walk" of Thermalization
+As the energetic positron ($e^+$) enters the polymer, it doesn't travel in a straight line. It undergoes a series of high-energy collisions with polymer chains, scattering in random directions. 
 
-When the positron finally slows down (thermalizes) and settles into a **Free Volume Void**, it doesn't find a pre-existing free electron; instead, it attracts one of the electrons it just knocked loose along its own track.
+This **Random Walk** creates the **Spur**: a localized track of ionized molecules and freed **Spur Electrons** ($e^-$). By the time the positron has lost its kinetic energy and reached "thermal" speeds, it is surrounded by the very electrons it just knocked loose.
 """)
 
 # ---------------------------------------------------------
-# 3D INTERACTIVE VISUALIZATION: The Spur & Capture
+# 3D INTERACTIVE VISUALIZATION: Random Walk Spur
 # ---------------------------------------------------------
-st.subheader("3D Visualization: Spur Electron Capture")
+st.subheader("3D Visualization: Random Walk & Spur Formation")
 
-# 1. Generate the Positron Track (Slowing down/Spiraling into the void)
-t = np.linspace(0, 20, 100)
-# A slowing spiral path
-path_x = (20 - 0.8*t) * np.cos(t) / 2
-path_y = (20 - 0.8*t) * np.sin(t) / 2
-path_z = np.linspace(10, 0, 100)
+# 1. Generate a Biased 3D Random Walk
+np.random.seed(44)
+n_steps = 120
+steps = np.random.normal(0, 0.8, (n_steps, 3))
 
-# 2. Generate "Spur Electrons" scattered along the track
-np.random.seed(42)
-spur_indices = [10, 30, 50, 70, 85]
-spur_x = [path_x[i] + np.random.normal(0, 1.5) for i in spur_indices]
-spur_y = [path_y[i] + np.random.normal(0, 1.5) for i in spur_indices]
-spur_z = [path_z[i] + np.random.normal(0, 1.5) for i in spur_indices]
+# Bias the walk so it starts far away and generally migrates toward the center (0,0,0)
+start_pos = np.array([12, 12, 10])
+path = np.zeros((n_steps, 3))
+path[0] = start_pos
 
-# The "Captured" electron is the one closest to the end of the path
-cap_e_x, cap_e_y, cap_e_z = spur_x[-1], spur_y[-1], spur_z[-1]
-final_pos_x, final_pos_y, final_pos_z = path_x[-1], path_y[-1], path_z[-1]
+for i in range(1, n_steps):
+    # Calculate vector to origin to "pull" the random walk toward the void
+    pull = -path[i-1] / np.linalg.norm(path[i-1]) * 0.4
+    path[i] = path[i-1] + steps[i] + pull
+
+# 2. Identify Spur Electrons at random collision points along the walk
+spur_indices = [20, 45, 75, 95, 110]
+spur_x = [path[i, 0] + np.random.normal(0, 1.2) for i in spur_indices]
+spur_y = [path[i, 1] + np.random.normal(0, 1.2) for i in spur_indices]
+spur_z = [path[i, 2] + np.random.normal(0, 1.2) for i in spur_indices]
+
+# Final Thermalized Positions
+final_pos = path[-1]
+cap_e = np.array([spur_x[-1], spur_y[-1], spur_z[-1]])
 
 fig_spur = go.Figure()
 
-# --- Draw the Void (Semi-transparent sphere at the center) ---
+# --- 1. The Free Volume Void (Central Sphere) ---
 u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
-sphere_x = 3 * np.cos(u) * np.sin(v)
-sphere_y = 3 * np.sin(u) * np.sin(v)
-sphere_z = 3 * np.cos(v)
+v_rad = 3.5
+sphere_x = v_rad * np.cos(u) * np.sin(v)
+sphere_y = v_rad * np.sin(u) * np.sin(v)
+sphere_z = v_rad * np.cos(v)
 fig_spur.add_trace(go.Mesh3d(x=sphere_x.flatten(), y=sphere_y.flatten(), z=sphere_z.flatten(), 
                              alphahull=0, opacity=0.1, color='cyan', name='Free Volume Void'))
 
-# --- Draw the Positron Track ---
-fig_spur.add_trace(go.Scatter3d(x=path_x, y=path_y, z=path_z, mode='lines',
-                                line=dict(color='white', width=4), name='Positron Track'))
+# --- 2. The Random Walk Track ---
+fig_spur.add_trace(go.Scatter3d(x=path[:,0], y=path[:,1], z=path[:,2], 
+                                mode='lines+markers',
+                                marker=dict(size=2, color='white', opacity=0.5),
+                                line=dict(color='white', width=3), 
+                                name='Positron Random Walk'))
 
-# --- Draw Spur Electrons ---
+# --- 3. Freed Spur Electrons ---
 fig_spur.add_trace(go.Scatter3d(x=spur_x[:-1], y=spur_y[:-1], z=spur_z[:-1], mode='markers',
-                                marker=dict(color='#1e90ff', size=4, symbol='circle'), 
-                                name='Free Spur Electrons ($e^-$)'))
+                                marker=dict(color='#1e90ff', size=5, symbol='circle'), 
+                                name='Spur Electrons ($e^-$)'))
 
-# --- Draw the Final Capture Pair ---
-# Thermalized Positron
-fig_spur.add_trace(go.Scatter3d(x=[final_pos_x], y=[final_pos_y], z=[final_pos_z], mode='markers',
-                                marker=dict(color='#ff4757', size=10), name='Thermalized $e^+$'))
+# --- 4. The Capture Act ---
+# Thermalized Positron (Red)
+fig_spur.add_trace(go.Scatter3d(x=[final_pos[0]], y=[final_pos[1]], z=[final_pos[2]], mode='markers',
+                                marker=dict(color='#ff4757', size=12), name='Thermalized $e^+$'))
 
-# Captured Electron
-fig_spur.add_trace(go.Scatter3d(x=[cap_e_x], y=[cap_e_y], z=[cap_e_z], mode='markers',
-                                marker=dict(color='#1e90ff', size=10), name='Captured $e^-$'))
+# Captured Electron (Blue)
+fig_spur.add_trace(go.Scatter3d(x=[cap_e[0]], y=[cap_e[1]], z=[cap_e[2]], mode='markers',
+                                marker=dict(color='#1e90ff', size=12), name='Captured $e^-$'))
 
 # Attraction Vector
-fig_spur.add_trace(go.Scatter3d(x=[final_pos_x, cap_e_x], y=[final_pos_y, cap_e_y], z=[final_pos_z, cap_e_z],
-                                mode='lines', line=dict(color='yellow', width=6), name='Coulomb Attraction'))
+fig_spur.add_trace(go.Scatter3d(x=[final_pos[0], cap_e[0]], 
+                                y=[final_pos[1], cap_e[1]], 
+                                z=[final_pos[2], cap_e[2]],
+                                mode='lines', line=dict(color='yellow', width=8), 
+                                name='Coulomb Attraction'))
 
 fig_spur.update_layout(
-    height=600,
+    height=700,
     scene=dict(
         xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False),
-        aspectmode='cube'
+        aspectmode='cube',
+        camera=dict(eye=dict(x=1.5, y=1.5, z=1.0))
     ),
     margin=dict(l=0, r=0, b=0, t=0),
-    legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
+    paper_bgcolor='rgba(0,0,0,0)',
+    legend=dict(font=dict(color="white"), yanchor="top", y=0.9, xanchor="left", x=0.05)
 )
 
 st.plotly_chart(fig_spur, use_container_width=True)
 
 st.markdown(r"""
-Once the positron and electron are bound, they form a binary system orbiting a mutual center of mass. Depending on the **spin alignment** during this capture, two versions of Positronium are formed:
+Once the positron captures an electron, they begin their mutual orbit. This "atom" exists in one of two states depending on whether their spins are aligned.
 """)
 
 st.markdown("---")
