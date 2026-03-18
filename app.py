@@ -59,7 +59,7 @@ with tab2:
     As the positron loses its kinetic energy and reaches thermal equilibrium, it must figure out where to "settle" within the polyacrylic matrix. Its final location is strictly dictated by the microscopic forces of the polymer.
 
     * **The Repulsive Landscape:** The molecular chains of a polymer consist of dense, positively charged atomic nuclei surrounded by tightly bound electron clouds. The positron experiences massive **Coulomb repulsion** from the positive atomic cores. Furthermore, as it begins interacting with the environment, it faces strong **exchange repulsion** (due to the Pauli exclusion principle) from the bulk electrons of the polymer chains.
-    * **The Free Volume Cavity:** Because of this intense repulsion, the polymer chains act like towering mountains of high potential energy. Seeking the lowest possible energy state, the positron is naturally funneled away from the molecular backbone and pushed into the microscopic empty spaces—the **free volume cavities**—created by the irregular packing or defects in the crystal structure. 
+    * **The Free Volume Cavity:** Because of this intense repulsion, the polymer chains act like towering mountains of high potential energy. Seeking the lowest possible energy state, the positron is naturally funneled away from the molecular backbone and pushed into the microscopic empty spaces—the **free volume cavities**. In amorphous polymers, these cavities are caused by realistic structural defects like inefficient chain packing, bulky side-groups, and terminating chain ends.
     """)
     
     st.markdown("---")
@@ -67,76 +67,88 @@ with tab2:
     col1, col2 = st.columns(2)
     
     # ---------------------------------------------------------
-    # Generate a Clean Crystalline Grid (Lattice)
+    # Generate Realistic Amorphous Polymer Chains
     # ---------------------------------------------------------
+    np.random.seed(42)
+    chain_segments = []
     points_x, points_y = [], []
-    chains = []
     
-    # 1. Generate atomic nodes, leaving a rectangular void in the center
-    for x_pt in np.linspace(1, 9, 9):
-        for y_pt in np.linspace(0.5, 9.5, 10):
-            # Skip points that fall inside the void
-            if 3.5 < x_pt < 6.5 and 3.5 < y_pt < 6.5:
+    # Start chains at various X positions
+    x_starts = np.linspace(0.5, 9.5, 14)
+    
+    for x_start in x_starts:
+        curr_x = x_start
+        segment_x, segment_y = [curr_x], [0.0]
+        
+        # Determine if this chain will break to form a "chain end" defect
+        is_broken_chain = (3.5 < x_start < 6.5)
+        
+        for y in np.linspace(0.2, 10.0, 45):
+            # Create the void via chain-end termination
+            if is_broken_chain and (4.0 < y < 6.0):
+                if len(segment_x) > 1:
+                    chain_segments.append((segment_x, segment_y))
+                segment_x, segment_y = [], [] # Start a new segment after the gap
+                curr_x = x_start + np.random.normal(0, 0.3) 
                 continue
-            points_x.append(x_pt)
-            points_y.append(y_pt)
+                
+            # Random walk to simulate amorphous polymer wiggling
+            curr_x += np.random.normal(0, 0.12)
             
-    # 2. Generate connecting lines to draw the grid
-    # Vertical grid lines
-    for x_line in np.linspace(1, 9, 9):
-        if 3.5 < x_line < 6.5:
-            chains.append(([x_line, x_line], [0.5, 3.5]))
-            chains.append(([x_line, x_line], [6.5, 9.5]))
-        else:
-            chains.append(([x_line, x_line], [0.5, 9.5]))
+            # Steric hindrance: Chains physically bend around the void space
+            dist_to_center = np.sqrt((curr_x - 5.0)**2 + (y - 5.0)**2)
+            if dist_to_center < 1.6:
+                angle = np.arctan2(y - 5.0, curr_x - 5.0)
+                curr_x = 5.0 + 1.6 * np.cos(angle)
+                
+            segment_x.append(curr_x)
+            segment_y.append(y)
+            points_x.append(curr_x)
+            points_y.append(y)
             
-    # Horizontal grid lines
-    for y_line in np.linspace(0.5, 9.5, 10):
-        if 3.5 < y_line < 6.5:
-            chains.append(([1.0, 3.5], [y_line, y_line]))
-            chains.append(([6.5, 9.0], [y_line, y_line]))
-        else:
-            chains.append(([1.0, 9.0], [y_line, y_line]))
+        if len(segment_x) > 1:
+            chain_segments.append((segment_x, segment_y))
 
     # ---------------------------------------------------------
-    # Compute Energy Landscape based strictly on atomic nodes
+    # Compute Energy Landscape based on actual atomic nodes
     # ---------------------------------------------------------
     x_grid = np.linspace(0, 10, 100)
     y_grid = np.linspace(0, 10, 100)
     X, Y = np.meshgrid(x_grid, y_grid)
     Z = np.zeros_like(X)
     
-    # Sum the repulsive potentials around each atomic node
+    # Sum the repulsive potentials around the polymer backbone points
+    # We use a smaller radius to make the "chains" look like distinct ridges
     for px, py in zip(points_x, points_y):
-        Z += 2.5 * np.exp(-((X - px)**2 + (Y - py)**2) / 0.4)
+        Z += 1.2 * np.exp(-((X - px)**2 + (Y - py)**2) / 0.25)
         
     Z += 0.5 # Baseline energy
-    Z = np.clip(Z, 0, 7) # Cap maximum repulsion for cleaner plotting
+    Z = np.clip(Z, 0, 7) # Cap maximum repulsion for clearer plotting
     
     # Find the deepest part of the free volume cavity
     min_idx = np.unravel_index(np.argmin(Z), Z.shape)
     cavity_x, cavity_y, cavity_z = X[min_idx], Y[min_idx], Z[min_idx]
     
-    # Calculate Positron Path (from a high-density crystal area into the void)
+    # Calculate Positron Path (rolling down the gradient into the void)
     path_t = np.linspace(0, 1, 25)
     start_x, start_y = 8.5, 5.0 
     path_x = start_x + (cavity_x - start_x) * path_t
     path_y = start_y + (cavity_y - start_y) * path_t
     
     # ==========================================
-    # LEFT COLUMN: Physical Crystal Structure
+    # LEFT COLUMN: Physical Polymer Structure
     # ==========================================
     with col1:
-        st.subheader("1. Crystalline Lattice")
+        st.subheader("1. Amorphous Polymer Matrix")
         
         fig_struct, ax_struct = plt.subplots(figsize=(6, 6))
         
-        # Plot the grid lines
-        for cx, cy in chains:
-            ax_struct.plot(cx, cy, '-', color='#4a69bd', alpha=0.6, linewidth=1.5)
-            
-        # Plot the atomic nodes
-        ax_struct.scatter(points_x, points_y, color='#4a69bd', s=35, zorder=3)
+        # Plot the tangled polymer chains
+        for cx, cy in chain_segments:
+            # Draw the backbone
+            ax_struct.plot(cx, cy, '-', color='#4a69bd', alpha=0.7, linewidth=2.5)
+            # Scatter points to represent atomic nodes/monomers
+            ax_struct.scatter(cx, cy, color='#4a69bd', s=15, zorder=3)
 
         # Plot the positron path
         ax_struct.plot(path_x, path_y, color='white', linestyle='--', linewidth=2.5, label="Positron Path")
@@ -164,7 +176,7 @@ with tab2:
         # Plot the 3D surface
         surf = ax_loc.plot_surface(X, Y, Z, cmap='plasma', alpha=0.9, linewidth=0, antialiased=True)
         
-        # Map the 2D path onto the 3D Z-coordinates with a slight hover
+        # Map the 2D path onto the 3D Z-coordinates
         path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.2
         
         # Plot the path and particles
@@ -181,7 +193,8 @@ with tab2:
         ax_loc.yaxis.pane.fill = False
         ax_loc.zaxis.pane.fill = False
         
-        ax_loc.view_init(elev=40, azim=-115)
+        # Adjusted viewing angle to peer into the rugged valley
+        ax_loc.view_init(elev=45, azim=-120)
         
         cbar = fig_loc.colorbar(surf, ax=ax_loc, shrink=0.4, aspect=15, pad=0.1)
         cbar.set_label('Potential Energy Barrier', rotation=270, labelpad=15)
@@ -189,7 +202,7 @@ with tab2:
         st.pyplot(fig_loc)
 
     st.markdown("""
-    By comparing the physical matrix (left) to the computed energy landscape (right), you can see how the dense crystalline chains create high-energy barriers (bright peaks), while the structural defect in the center forms a natural low-energy basin (dark valley). The positron is repelled by the atomic cores and funneled directly into this free volume void.
+    By comparing the physical matrix (left) to the computed energy landscape (right), you can clearly see how irregular polymer packing dictates the positron's destination. The positron is repelled by the dense ridges of the molecular backbone and naturally flows down into the deep, low-energy basin formed by the structural void.
     """)
 
     st.markdown("""
