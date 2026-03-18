@@ -229,13 +229,136 @@ with tab2:
     st.markdown("""
     As seen in the 3D landscape above, the positron avoids the bright yellow/orange peaks (the dense polyacrylic chains) and rolls down into the dark purple valley (the physical void). Once localized at the bottom of this potential energy well, it is ready for Step 2: forming Positronium.
     """)
-
-    st.markdown("""
-    ### Step 2: Capturing a Partner 
-    Once isolated in a cavity (or while transitioning into one), the positron ($e^+$) captures a loose electron ($e^-$) from the surrounding polymer. Because they have equal but opposite electric charges, they bind together via Coulomb attraction to form a metastable, hydrogen-like atom called **Positronium (Ps)**. 
+    # ==========================================
+    # STEP 2: Positronium Formation
+    # ==========================================
     
-    Unlike standard Hydrogen (which has a heavy proton fixed in the center), the electron and positron have the exact same mass. Therefore, they orbit around their mutual center of mass, like a binary star system.
-
+    st.markdown("""
+    ### Step 2: Capturing a Partner & Forming Positronium
+    Once isolated in a free volume cavity, the thermalized positron ($e^+$) captures a loose electron ($e^-$) from the surrounding polymer matrix. Because they have equal but opposite electric charges, they bind together via Coulomb attraction to form a metastable, hydrogen-like exotic atom called **Positronium (Ps)**. 
+    
+    Unlike standard Hydrogen (which has a heavy proton fixed in the center), the electron and positron have the exact same mass. Therefore, they orbit around their mutual center of mass, exactly like a binary star system. The radius of this orbit is twice that of a normal hydrogen atom.
+    
+    Depending on how the quantum spins of the two particles align upon capture, Positronium forms in one of two distinct states. This distinction is the fundamental basis of Positron Annihilation Lifetime Spectroscopy (PALS):
+    """)
+    
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    
+    # Generate Orbit Coordinates
+    theta = np.linspace(0, 2 * np.pi, 100)
+    orbit_x = np.cos(theta)
+    orbit_y = np.sin(theta)
+    orbit_z = np.zeros_like(theta)
+    
+    def create_ps_figure(is_ortho):
+        fig = go.Figure()
+    
+        # Mutual Orbit Path
+        fig.add_trace(go.Scatter3d(
+            x=orbit_x, y=orbit_y, z=orbit_z, 
+            mode='lines', 
+            line=dict(color='gray', dash='dash', width=3), 
+            name='Mutual Orbit'
+        ))
+    
+        # Center of Mass
+        fig.add_trace(go.Scatter3d(
+            x=[0], y=[0], z=[0], 
+            mode='markers', 
+            marker=dict(size=4, color='white', symbol='cross'), 
+            name='Center of Mass'
+        ))
+    
+        # Positron (Red)
+        fig.add_trace(go.Scatter3d(
+            x=[1], y=[0], z=[0], 
+            mode='markers', 
+            marker=dict(size=14, color='#ff4757'), 
+            name='Positron (e+)'
+        ))
+        # Positron Spin Vector (Always Up)
+        fig.add_trace(go.Scatter3d(
+            x=[1, 1], y=[0, 0], z=[0, 0.8], 
+            mode='lines', 
+            line=dict(color='#ff4757', width=6), 
+            showlegend=False
+        ))
+        fig.add_trace(go.Cone(
+            x=[1], y=[0], z=[0.8], 
+            u=[0], v=[0], w=[0.5], 
+            sizeref=0.3, showscale=False, 
+            colorscale=[[0, '#ff4757'], [1, '#ff4757']]
+        ))
+    
+        # Electron (Blue)
+        fig.add_trace(go.Scatter3d(
+            x=[-1], y=[0], z=[0], 
+            mode='markers', 
+            marker=dict(size=14, color='#4a69bd'), 
+            name='Electron (e-)'
+        ))
+        
+        # Electron Spin Vector (Up for Ortho, Down for Para)
+        if is_ortho:
+            z_start, z_end, cone_w = 0, 0.8, 0.5
+        else:
+            z_start, z_end, cone_w = 0, -0.8, -0.5
+            
+        fig.add_trace(go.Scatter3d(
+            x=[-1, -1], y=[0, 0], z=[z_start, z_end], 
+            mode='lines', 
+            line=dict(color='#4a69bd', width=6), 
+            showlegend=False
+        ))
+        fig.add_trace(go.Cone(
+            x=[-1], y=[0], z=[z_end], 
+            u=[0], v=[0], w=[cone_w], 
+            sizeref=0.3, showscale=False, 
+            colorscale=[[0, '#4a69bd'], [1, '#4a69bd']]
+        ))
+    
+        # Format Scene
+        fig.update_layout(
+            scene=dict(
+                xaxis=dict(range=[-2, 2], showgrid=False, visible=False),
+                yaxis=dict(range=[-2, 2], showgrid=False, visible=False),
+                zaxis=dict(range=[-2, 2], showgrid=False, visible=False),
+                camera=dict(eye=dict(x=0, y=-1.8, z=0.6))
+            ),
+            height=350,
+            margin=dict(l=0, r=0, b=0, t=0),
+            showlegend=False
+        )
+        return fig
+    
+    # --- LEFT COLUMN: Para-Positronium ---
+    with col1:
+        st.subheader("Para-Positronium (p-Ps)")
+        st.plotly_chart(create_ps_figure(is_ortho=False), use_container_width=True)
+        st.markdown("""
+        * **Spin Alignment:** Anti-parallel ($\uparrow \downarrow$)
+        * **Total Spin:** $S = 0$ (Singlet state)
+        * **Formation Probability:** 25%
+        * **Vacuum Lifetime:** ~0.125 ns
+        
+        Because the spins cancel out, p-Ps is highly unstable. It quickly self-annihilates into two gamma rays. Its lifetime is too short to effectively probe polymer cavities.
+        """)
+    
+    # --- RIGHT COLUMN: Ortho-Positronium ---
+    with col2:
+        st.subheader("Ortho-Positronium (o-Ps)")
+        st.plotly_chart(create_ps_figure(is_ortho=True), use_container_width=True)
+        st.markdown("""
+        * **Spin Alignment:** Parallel ($\uparrow \uparrow$)
+        * **Total Spin:** $S = 1$ (Triplet state)
+        * **Formation Probability:** 75%
+        * **Vacuum Lifetime:** ~142 ns
+        
+        Because the spins are aligned, self-annihilation requires emitting three gamma rays, a rare quantum event. **This extended lifetime allows o-Ps to act as a probe for measuring free volume.**
+        """)
+    st.markdown("""
     ### Step 3: The Rules of Spin
     Both the electron and the positron are fermions, meaning they each possess an intrinsic angular momentum, or "spin", of $s = 1/2$. When these two particles bind together, quantum mechanics dictates that their spins must combine. 
     
