@@ -573,6 +573,26 @@ with tab3:
     Since **o-Ps** cannot decay into 2 photons (violates $C$-parity) and cannot decay into 1 photon (violates momentum), it is forced into the highly complex **3-photon decay**. This "statistical bottleneck" is why o-Ps lives 1,000 times longer than p-Ps.
     """)
 
+    with st.expander("Why does a 3-photon decay take 1,000 times longer?"):
+        st.markdown(r"""
+        In quantum mechanics, "lifetime" is a measure of **probability**. The rarer an event is, the longer a particle will survive on average before it occurs. 
+        
+        Producing three photons is fundamentally much rarer than producing two, primarily due to:
+        
+        * **The QED Penalty:** In Quantum Electrodynamics (QED), emitting a photon requires an interaction with the electromagnetic field. Each interaction reduces the event's overall probability by the fine-structure constant ($\alpha \approx 1/137$). That mandatory third photon adds a massive mathematical penalty.
+        * **Phase Space Geometry:** To conserve momentum, two photons simply fire back-to-back in a straight line. Three photons, however, must perfectly balance their varying energies and angles in a 2D plane. This specific geometry is statistically much harder to achieve (it has a smaller "phase space").
+        
+        When physicists combine the electromagnetic penalty with these geometric constraints, the exact QED formula for the ratio of their decay rates ($\Gamma$) is:
+        """)
+        
+        st.latex(r"\frac{\Gamma_{o-Ps}}{\Gamma_{p-Ps}} = \frac{4(\pi^2 - 9)}{9\pi} \alpha")
+        
+        st.markdown(r"""
+        Plugging in $\alpha \approx 1/137$, this ratio equals approximately **1/1115**. 
+        
+        Because lifetime is the inverse of the decay rate, the 3-photon decay is 1,115 times less likely to happen at any given moment. This mathematical bottleneck is exactly why Ortho-Positronium lives 1,115 times longer (~142 ns) than Para-Positronium (~125 ps).
+        """)
+
     st.divider()
 
     st.header("The Pick-Off Loophole")
