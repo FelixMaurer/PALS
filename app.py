@@ -198,19 +198,20 @@ with tab2:
 
         # Formatting the Interactive Plot
         fig_loc.update_layout(
+            height=600,  # Force the overall figure height to match Matplotlib's 6x6 square
             scene=dict(
+                aspectratio=dict(x=1, y=1, z=0.8), # Prevents the 3D box from squishing vertically
                 xaxis_title='X (nm)',
                 yaxis_title='Y (nm)',
                 zaxis_title='Energy (Repulsion)',
                 xaxis=dict(range=[0, 10], showgrid=False),
                 yaxis=dict(range=[0, 10], showgrid=False),
-                # Dynamic Z-axis range based on the less tight Z limits
-                zaxis=dict(range=[0, np.max(Z) + 2], showgrid=False), 
+                zaxis=dict(range=[0, 15], showgrid=False), 
                 camera=dict(
-                    eye=dict(x=-1.5, y=-1.5, z=1.2) # Initial viewing angle
+                    eye=dict(x=-1.5, y=-1.5, z=1.2)
                 )
             ),
-            margin=dict(l=0, r=0, b=0, t=30),
+            margin=dict(l=0, r=0, b=0, t=40), # Keep margins tight so it fills the column
             legend=dict(
                 orientation="h",
                 yanchor="bottom", y=1.02,
