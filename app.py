@@ -282,30 +282,45 @@ fig_spur.add_trace(go.Mesh3d(x=sphere_x.flatten(), y=sphere_y.flatten(), z=spher
                              alphahull=0, opacity=0.1, color='cyan', name='Free Volume Void'))
 
 # --- 2. The Positron Track (The Path) ---
-fig_spur.add_trace(go.Scatter3d(x=path[:,0], y=path[:,1], z=path[:,2], 
-                                mode='lines',
-                                line=dict(color='white', width=4, dash='solid'), 
-                                name='Positron Path ($e^+$)'))
+fig_spur.add_trace(go.Scatter3d(
+    x=path[:,0], y=path[:,1], z=path[:,2], 
+    mode='lines',
+    line=dict(color='white', width=4, dash='solid'), 
+    name='Positron Path (e<sup>+</sup>)' # Fixed: HTML superscript
+))
 
 # --- 3. Ionization Centers (M+) at every collision ---
-fig_spur.add_trace(go.Scatter3d(x=ions_x, y=ions_y, z=ions_z, mode='markers',
-                                marker=dict(color='#ffa502', size=6, symbol='x'), 
-                                name='Ionization Center ($M^+$)'))
+fig_spur.add_trace(go.Scatter3d(
+    x=ions_x, y=ions_y, z=ions_z, 
+    mode='markers',
+    marker=dict(color='#ffa502', size=6, symbol='x'), 
+    name='Ionization Center (M<sup>+</sup>)' # Fixed
+))
 
 # --- 4. Spur Electrons (e-) scattered along the track ---
-fig_spur.add_trace(go.Scatter3d(x=electrons_x[:-1], y=electrons_y[:-1], z=electrons_z[:-1], mode='markers',
-                                marker=dict(color='#1e90ff', size=4, symbol='circle'), 
-                                name='Spur Electrons ($e^-$)'))
+fig_spur.add_trace(go.Scatter3d(
+    x=electrons_x[:-1], y=electrons_y[:-1], z=electrons_z[:-1], 
+    mode='markers',
+    marker=dict(color='#1e90ff', size=4, symbol='circle'), 
+    name='Spur Electrons (e<sup>-</sup>)' # Fixed
+))
 
 # --- 5. The Final Capture (Ps Formation) ---
 # Thermalized Positron (Red)
-fig_spur.add_trace(go.Scatter3d(x=[final_pos[0]], y=[final_pos[1]], z=[final_pos[2]], mode='markers',
-                                marker=dict(color='#ff4757', size=12), name='Thermalized $e^+$'))
+fig_spur.add_trace(go.Scatter3d(
+    x=[final_pos[0]], y=[final_pos[1]], z=[final_pos[2]], 
+    mode='markers',
+    marker=dict(color='#ff4757', size=12), 
+    name='Thermalized e<sup>+</sup>' # Fixed
+))
 
 # Captured Electron (Bright Blue)
-fig_spur.add_trace(go.Scatter3d(x=[captured_e[0]], y=[captured_e[1]], z=[captured_e[2]], mode='markers',
-                                marker=dict(color='#1e90ff', size=12, line=dict(color='white', width=2)), 
-                                name='Captured $e^-$'))
+fig_spur.add_trace(go.Scatter3d(
+    x=[captured_e[0]], y=[captured_e[1]], z=[captured_e[2]], 
+    mode='markers',
+    marker=dict(color='#1e90ff', size=12, line=dict(color='white', width=2)), 
+    name='Captured e<sup>-</sup>' # Fixed
+))
 
 # Attraction Force Vector
 fig_spur.add_trace(go.Scatter3d(x=[final_pos[0], captured_e[0]], 
