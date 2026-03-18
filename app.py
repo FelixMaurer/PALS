@@ -492,92 +492,92 @@ st.pyplot(fig_ps)
 # TAB 3: The Triplet State (Decay Rules)
 # ==========================================
 with tab3:
-st.header("Charge Parity & The Forbidden Decay")
-
-st.markdown("""
-In quantum mechanics, when particles annihilate into photons, a property called **Charge Parity (C-parity)** must be conserved. 
-A single photon has a C-parity of $-1$. Therefore, an event producing $n$ photons has a total C-parity of $(-1)^n$.
-""")
-
-st.latex(r"C_{\text{Positronium}} = (-1)^{L+S}")
-
-st.markdown("""
-* **Para-Ps ($S=0$):** $C = (-1)^{0+0} = +1$. It can easily decay into **2 photons** ($(-1)^2 = +1$).
-* **Ortho-Ps ($S=1$):** $C = (-1)^{0+1} = -1$. It *must* decay into an odd number of photons. 
-
-**Why not 1 photon?** A system at rest cannot emit a single photon without violating the conservation of momentum. Therefore, isolated ortho-positronium is forced to decay into **3 photons**, which is mathematically highly improbable and takes a very long time (~142 ns).
-""")
-
-st.divider()
-st.header("The Pick-Off Loophole in Matter")
-st.markdown("""
-When o-Ps is trapped inside a polymer cavity, it doesn't wait 142 ns to decay. As it bounces around, its outer positron penetrates the electron clouds of the polymer chains lining the cavity wall. 
-
-If the positron encounters a polymer electron with an **opposite spin** to its own, it abandons its original partner, forms a temporary pseudo-singlet state with the wall electron, and instantly annihilates via the much faster 2-photon pathway. This is called **Pick-Off Annihilation**.
-""")
-
-fig_decay, (ax_vac, ax_wall) = plt.subplots(1, 2, figsize=(12, 6))
-
-# --- Left Panel: Vacuum Decay (3 photons) ---
-ax_vac.set_title("Direct Vacuum Decay: 3 Photons (Slow)")
-ax_vac.axis('off')
-ax_vac.set_xlim(-2, 2)
-ax_vac.set_ylim(-2, 2)
-
-# Draw o-Ps
-ax_vac.plot(0, 0, 'ro', markersize=12, label='Positron')
-ax_vac.plot(0.2, 0.2, 'bo', markersize=12, label='Electron')
-ax_vac.text(0, -0.4, "o-Ps (Total Spin=1)", ha='center')
-
-# Draw 3 Photons
-angles = [np.pi/2, 7*np.pi/6, 11*np.pi/6]
-for angle in angles:
-    x_w = [0.2 + i*0.2*np.cos(angle) for i in range(8)]
-    y_w = [0.2 + i*0.2*np.sin(angle) + 0.05*np.sin(i*np.pi) for i in range(8)]
-    ax_vac.plot(x_w, y_w, 'y-', lw=2)
-ax_vac.text(1, 1, r"$\gamma$", color='goldenrod', fontsize=16)
-ax_vac.text(-1.5, -0.5, r"$\gamma$", color='goldenrod', fontsize=16)
-ax_vac.text(1, -1.5, r"$\gamma$", color='goldenrod', fontsize=16)
-ax_vac.legend(loc='upper left', fontsize='small')
-
-# --- Right Panel: Pick-off in matter ---
-ax_wall.set_title("Pick-Off in Matter: 2 Photons (Fast)")
-ax_wall.axis('off')
-ax_wall.set_xlim(-2, 2)
-ax_wall.set_ylim(-2, 2)
-
-# Polymer Wall
-rect = patches.Rectangle((0.5, -2), 1.5, 4, linewidth=1, edgecolor='none', facecolor='lightgray', alpha=0.5)
-ax_wall.add_patch(rect)
-ax_wall.text(1.25, 1.5, "Polymer Wall\n(Dense Electrons)", ha='center')
-
-# Path of o-Ps
-ax_wall.plot([-1.5, 0.5], [0, 0], 'k--', lw=1)
-ax_wall.plot(-1.5, 0, 'go', markersize=8) # Start point
-ax_wall.text(-1.5, 0.2, "Trapped\no-Ps", ha='center')
-
-# Original o-Ps pair
-ax_wall.plot(0.5, 0, 'ro', markersize=12) # Positron hits wall
-ax_wall.plot(0.3, -0.2, 'bo', markersize=12, alpha=0.3) # Original electron left behind
-ax_wall.arrow(0.5, 0.2, 0, 0.3, head_width=0.08, color='red') # Positron spin up
-
-# Pick-off electron from wall
-ax_wall.plot(0.7, 0, 'bo', markersize=12) 
-ax_wall.arrow(0.7, 0.5, 0, -0.3, head_width=0.08, color='blue') # Wall electron spin down
-
-# 2 Photons emitted
-x_w1 = [0.6 + i*0.2*np.cos(np.pi/4) for i in range(6)]
-y_w1 = [0 + i*0.2*np.sin(np.pi/4) + 0.05*np.sin(i*np.pi) for i in range(6)]
-ax_wall.plot(x_w1, y_w1, 'y-', lw=2)
-
-x_w2 = [0.6 + i*0.2*np.cos(5*np.pi/4) for i in range(6)]
-y_w2 = [0 + i*0.2*np.sin(5*np.pi/4) + 0.05*np.sin(i*np.pi) for i in range(6)]
-ax_wall.plot(x_w2, y_w2, 'y-', lw=2)
-
-ax_wall.text(1.5, 1, r"$\gamma$", color='goldenrod', fontsize=16)
-ax_wall.text(-0.5, -1, r"$\gamma$", color='goldenrod', fontsize=16)
-
-st.pyplot(fig_decay)
+    st.header("Charge Parity & The Forbidden Decay")
+    
+    st.markdown("""
+    In quantum mechanics, when particles annihilate into photons, a property called **Charge Parity (C-parity)** must be conserved. 
+    A single photon has a C-parity of $-1$. Therefore, an event producing $n$ photons has a total C-parity of $(-1)^n$.
+    """)
+    
+    st.latex(r"C_{\text{Positronium}} = (-1)^{L+S}")
+    
+    st.markdown("""
+    * **Para-Ps ($S=0$):** $C = (-1)^{0+0} = +1$. It can easily decay into **2 photons** ($(-1)^2 = +1$).
+    * **Ortho-Ps ($S=1$):** $C = (-1)^{0+1} = -1$. It *must* decay into an odd number of photons. 
+    
+    **Why not 1 photon?** A system at rest cannot emit a single photon without violating the conservation of momentum. Therefore, isolated ortho-positronium is forced to decay into **3 photons**, which is mathematically highly improbable and takes a very long time (~142 ns).
+    """)
+    
+    st.divider()
+    st.header("The Pick-Off Loophole in Matter")
+    st.markdown("""
+    When o-Ps is trapped inside a polymer cavity, it doesn't wait 142 ns to decay. As it bounces around, its outer positron penetrates the electron clouds of the polymer chains lining the cavity wall. 
+    
+    If the positron encounters a polymer electron with an **opposite spin** to its own, it abandons its original partner, forms a temporary pseudo-singlet state with the wall electron, and instantly annihilates via the much faster 2-photon pathway. This is called **Pick-Off Annihilation**.
+    """)
+    
+    fig_decay, (ax_vac, ax_wall) = plt.subplots(1, 2, figsize=(12, 6))
+    
+    # --- Left Panel: Vacuum Decay (3 photons) ---
+    ax_vac.set_title("Direct Vacuum Decay: 3 Photons (Slow)")
+    ax_vac.axis('off')
+    ax_vac.set_xlim(-2, 2)
+    ax_vac.set_ylim(-2, 2)
+    
+    # Draw o-Ps
+    ax_vac.plot(0, 0, 'ro', markersize=12, label='Positron')
+    ax_vac.plot(0.2, 0.2, 'bo', markersize=12, label='Electron')
+    ax_vac.text(0, -0.4, "o-Ps (Total Spin=1)", ha='center')
+    
+    # Draw 3 Photons
+    angles = [np.pi/2, 7*np.pi/6, 11*np.pi/6]
+    for angle in angles:
+        x_w = [0.2 + i*0.2*np.cos(angle) for i in range(8)]
+        y_w = [0.2 + i*0.2*np.sin(angle) + 0.05*np.sin(i*np.pi) for i in range(8)]
+        ax_vac.plot(x_w, y_w, 'y-', lw=2)
+    ax_vac.text(1, 1, r"$\gamma$", color='goldenrod', fontsize=16)
+    ax_vac.text(-1.5, -0.5, r"$\gamma$", color='goldenrod', fontsize=16)
+    ax_vac.text(1, -1.5, r"$\gamma$", color='goldenrod', fontsize=16)
+    ax_vac.legend(loc='upper left', fontsize='small')
+    
+    # --- Right Panel: Pick-off in matter ---
+    ax_wall.set_title("Pick-Off in Matter: 2 Photons (Fast)")
+    ax_wall.axis('off')
+    ax_wall.set_xlim(-2, 2)
+    ax_wall.set_ylim(-2, 2)
+    
+    # Polymer Wall
+    rect = patches.Rectangle((0.5, -2), 1.5, 4, linewidth=1, edgecolor='none', facecolor='lightgray', alpha=0.5)
+    ax_wall.add_patch(rect)
+    ax_wall.text(1.25, 1.5, "Polymer Wall\n(Dense Electrons)", ha='center')
+    
+    # Path of o-Ps
+    ax_wall.plot([-1.5, 0.5], [0, 0], 'k--', lw=1)
+    ax_wall.plot(-1.5, 0, 'go', markersize=8) # Start point
+    ax_wall.text(-1.5, 0.2, "Trapped\no-Ps", ha='center')
+    
+    # Original o-Ps pair
+    ax_wall.plot(0.5, 0, 'ro', markersize=12) # Positron hits wall
+    ax_wall.plot(0.3, -0.2, 'bo', markersize=12, alpha=0.3) # Original electron left behind
+    ax_wall.arrow(0.5, 0.2, 0, 0.3, head_width=0.08, color='red') # Positron spin up
+    
+    # Pick-off electron from wall
+    ax_wall.plot(0.7, 0, 'bo', markersize=12) 
+    ax_wall.arrow(0.7, 0.5, 0, -0.3, head_width=0.08, color='blue') # Wall electron spin down
+    
+    # 2 Photons emitted
+    x_w1 = [0.6 + i*0.2*np.cos(np.pi/4) for i in range(6)]
+    y_w1 = [0 + i*0.2*np.sin(np.pi/4) + 0.05*np.sin(i*np.pi) for i in range(6)]
+    ax_wall.plot(x_w1, y_w1, 'y-', lw=2)
+    
+    x_w2 = [0.6 + i*0.2*np.cos(5*np.pi/4) for i in range(6)]
+    y_w2 = [0 + i*0.2*np.sin(5*np.pi/4) + 0.05*np.sin(i*np.pi) for i in range(6)]
+    ax_wall.plot(x_w2, y_w2, 'y-', lw=2)
+    
+    ax_wall.text(1.5, 1, r"$\gamma$", color='goldenrod', fontsize=16)
+    ax_wall.text(-0.5, -1, r"$\gamma$", color='goldenrod', fontsize=16)
+    
+    st.pyplot(fig_decay)
 
 # ==========================================
 # TAB 4: PALS Statistics
