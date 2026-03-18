@@ -117,18 +117,19 @@ with tab2:
         Z += 1.2 * np.exp(-((X - px)**2 + (Y - py)**2) / 0.25)
         
     Z += 0.5 
-    # Loosened the Z limits here (was 7, now 15) to allow taller, more dramatic peaks
     Z = np.clip(Z, 0, 15) 
     
     min_idx = np.unravel_index(np.argmin(Z), Z.shape)
     cavity_x, cavity_y, cavity_z = X[min_idx], Y[min_idx], Z[min_idx]
     
+    # ---------------------------------------------------------
+    # PATH UPDATE: Positron now enters from the bottom
+    # ---------------------------------------------------------
     path_t = np.linspace(0, 1, 25)
-    start_x, start_y = 8.5, 5.0 
+    start_x, start_y = 5.0, 0.5 # <-- Changed from 8.5, 5.0
     path_x = start_x + (cavity_x - start_x) * path_t
     path_y = start_y + (cavity_y - start_y) * path_t
     
-    # Map the 2D path onto the 3D Z-coordinates
     path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.3
 
     # ==========================================
@@ -169,7 +170,7 @@ with tab2:
             z=Z, x=x_grid, y=y_grid, 
             colorscale='Plasma', 
             opacity=0.9,
-            colorbar=dict(title="Energy Barrier", len=0.5) # Changed 'shrink' to 'len'
+            colorbar=dict(title="Energy Barrier", len=0.5)
         ))
 
         # Positron Path
@@ -198,9 +199,9 @@ with tab2:
 
         # Formatting the Interactive Plot
         fig_loc.update_layout(
-            height=750,  # <-- INCREASED from 600. Adjust this slightly if your screen is wider/narrower
+            height=750,  
             scene=dict(
-                aspectratio=dict(x=1, y=1, z=1), # <-- Changed z to 1 to make the bounding box a perfect cube
+                aspectratio=dict(x=1, y=1, z=1), 
                 xaxis_title='X (nm)',
                 yaxis_title='Y (nm)',
                 zaxis_title='Energy (Repulsion)',
@@ -211,15 +212,14 @@ with tab2:
                     eye=dict(x=-1.5, y=-1.5, z=1.2)
                 )
             ),
-            margin=dict(l=0, r=0, b=0, t=0), # <-- Set top margin (t) to 0 so the legend doesn't push the plot down
+            margin=dict(l=0, r=0, b=0, t=0), 
             legend=dict(
                 orientation="h",
-                yanchor="bottom", y=0.95, # Moved legend slightly down so it sits closer to the plot
+                yanchor="bottom", y=0.95, 
                 xanchor="right", x=1
             )
         )
         
-        # Render interactive Plotly chart in Streamlit
         st.plotly_chart(fig_loc, use_container_width=True)
 
     st.markdown("""
