@@ -198,9 +198,9 @@ with tab2:
 
         # Formatting the Interactive Plot
         fig_loc.update_layout(
-            height=600,  # Force the overall figure height to match Matplotlib's 6x6 square
+            height=750,  # <-- INCREASED from 600. Adjust this slightly if your screen is wider/narrower
             scene=dict(
-                aspectratio=dict(x=1, y=1, z=0.8), # Prevents the 3D box from squishing vertically
+                aspectratio=dict(x=1, y=1, z=1), # <-- Changed z to 1 to make the bounding box a perfect cube
                 xaxis_title='X (nm)',
                 yaxis_title='Y (nm)',
                 zaxis_title='Energy (Repulsion)',
@@ -211,10 +211,10 @@ with tab2:
                     eye=dict(x=-1.5, y=-1.5, z=1.2)
                 )
             ),
-            margin=dict(l=0, r=0, b=0, t=40), # Keep margins tight so it fills the column
+            margin=dict(l=0, r=0, b=0, t=0), # <-- Set top margin (t) to 0 so the legend doesn't push the plot down
             legend=dict(
                 orientation="h",
-                yanchor="bottom", y=1.02,
+                yanchor="bottom", y=0.95, # Moved legend slightly down so it sits closer to the plot
                 xanchor="right", x=1
             )
         )
