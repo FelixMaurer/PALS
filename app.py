@@ -235,61 +235,117 @@ with tab2:
 st.header("Step 2: Capturing a Partner & Forming Positronium")
 
 st.markdown(r"""
-Once isolated in a free volume cavity, the thermalized positron ($e^+$) doesn't stay alone for long. It exerts a powerful **Coulomb attraction** on the electrons ($e^-$) in the surrounding "spur" (the track of ionization it left behind). 
+#### Where does the electron come from? The Spur Model.
+The energetic positron doesn't just bump into a pre-existing free electron. In materials like polymers, the formation process is best described by **The Spur Model**.
 
-Unlike a standard Hydrogen atom where an electron orbits a heavy, stationary proton, Positronium consists of two particles with **identical mass**. They "find" each other and begin orbiting a mutual center of mass, like a binary star system.
+As the positron ($e^+$) enters the polyacrylic matrix, it is highly energetic. It travels through the dense bulk polymer (1), violently colliding with neutral polymer molecules along its path. These collisions strip away "loose" valence electrons from the polymer chains, creating parent ions ($M^+$) and a trail of newly freed **Spur Electrons** ($e^-$).
+
+The positron eventually thermalizes (reaches low kinetic energy) and gets localized within a Free Volume Void (2). If there are spur electrons within its localized Coulomb field, they find each other, and bind together via mutual attraction (3) to form a metastable exotic atom called **Positronium (Ps)**.
 """)
 
 # ---------------------------------------------------------
-# NEW VISUALIZATION: The Capture Mechanism (2D Interaction)
+# NEW VISUALIZATION: The Spur Model & Capture Geometry
 # ---------------------------------------------------------
-st.subheader("The Capture Process: Coulomb Attraction")
+st.subheader("Conceptualizing the Source: Spur Electron Capture")
 
-# Generate a "spiraling in" capture path
-t_capture = np.linspace(0, 10, 100)
-# Positron spirals from top-right
-pos_x = 2 * np.exp(-0.2 * t_capture) * np.cos(t_capture) + 0.5
-pos_y = 2 * np.exp(-0.2 * t_capture) * np.sin(t_capture) + 0.5
-# Electron spirals from bottom-left
-ele_x = -2 * np.exp(-0.2 * t_capture) * np.cos(t_capture) - 0.5
-ele_y = -2 * np.exp(-0.2 * t_capture) * np.sin(t_capture) - 0.5
+# 1. Simulate the Positron Track & Ionization Events
+np.random.seed(42) # Re-seed for consistency in this visualization
+theta_trace = np.linspace(0, np.pi*2.2, 50)
+radius_trace = np.linspace(8, 0.5, 50) + np.random.normal(0, 0.2, 50)
+pos_trace_x = radius_trace * np.cos(theta_trace) + 2.0
+pos_trace_y = radius_trace * np.sin(theta_trace) + 2.0
+
+# 2. Identify several "Spur Electrons" created along the track
+# Select indices for ionizations along the slowing track
+ionization_indices = [5, 12, 18, 24, 30, 35, 40]
+spur_electrons_x = [pos_trace_x[i] + np.random.normal(0, 0.4) for i in ionization_indices]
+spur_electrons_y = [pos_trace_y[i] + np.random.normal(0, 0.4) for i in ionization_indices]
+
+# Highlight the *one* final spur electron to be captured near the void
+captured_idx = ionization_indices[-1]
+captured_ele_x, captured_ele_y = spur_electrons_x[-1], spur_electrons_y[-1]
+
+# Final Thermalized Positron Location
+thermal_pos_x, thermal_pos_y = pos_trace_x[-1], pos_trace_y[-1]
+
+# Center of the Void
+void_center_x, void_center_y = thermal_pos_x - 0.5, thermal_pos_y + 0.5
 
 fig_capture = go.Figure()
 
-# Draw the Free Volume Void Boundary
-fig_capture.add_shape(type="circle", x0=-3, y0=-3, x1=3, y1=3, 
+# --- 1. Draw Polymer Bulk & Spur Region Boundary ---
+# Gray background density representation
+fig_capture.add_shape(type="rect", x0=-8, y0=-8, x1=10, y1=10, 
+                      line_color="rgba(0,0,0,0)", fillcolor="rgba(100, 100, 100, 0.1)")
+
+# Label Spur Region
+fig_capture.add_annotation(x=-5, y=7, text="(1) Polymer Bulk / Spur Region", 
+                           font=dict(size=14, color="white"), showarrow=False, align="left")
+
+# --- 2. Draw The Free Volume Void defect ---
+# Dotted void boundary in the top-right center
+fig_capture.add_shape(type="circle", x0=void_center_x - 1.5, y0=void_center_y - 1.5, 
+                      x1=void_center_x + 1.5, y1=void_center_y + 1.5, 
                       line_color="gray", line_dash="dash", fillcolor="rgba(255, 255, 255, 0.05)")
 
-# Draw trajectories
-fig_capture.add_trace(go.Scatter(x=pos_x, y=pos_y, mode='lines', name='Positron Path', line=dict(color='#2ed573', width=3)))
-fig_capture.add_trace(go.Scatter(x=ele_x, y=ele_y, mode='lines', name='Electron Path', line=dict(color='#1e90ff', width=3)))
+# Label the defect
+fig_capture.add_annotation(x=void_center_x + 2.0, y=void_center_y + 1.0, 
+                           text="(2) Structural Free<br>Volume Void", align="left",
+                           font=dict(size=14, color="white"), showarrow=True, arrowhead=2, arrowcolor="gray")
 
-# Particle heads
-fig_capture.add_trace(go.Scatter(x=[pos_x[-1]], y=[pos_y[-1]], mode='markers', marker=dict(color='#ff4757', size=15), name='Positron (e+)'))
-fig_capture.add_trace(go.Scatter(x=[ele_x[-1]], y=[ele_y[-1]], mode='markers', marker=dict(color='#4a69bd', size=15), name='Electron (e-)'))
+# --- 3. Visualize the energetic Positron Track ---
+# Fade line thickness/opacity to show slowing down
+fig_capture.add_trace(go.Scatter(x=pos_trace_x[:-1], y=pos_trace_y[:-1], mode='lines', 
+                                name='Energetic Positron Track', 
+                                line=dict(color='white', width=4, dash='solid'), opacity=0.8))
 
-# Add "Attraction" Force Vectors
-fig_capture.add_annotation(x=pos_x[20], y=pos_y[20], ax=ele_x[20], ay=ele_y[20], xref="x", yref="y", axref="x", ayref="y",
-                           text="", showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor="white", opacity=0.5)
+fig_capture.add_trace(go.Scatter(x=[pos_trace_x[0]], y=[pos_trace_y[0]], mode='markers', 
+                                marker=dict(color='white', size=8, symbol='circle-open'), 
+                                showlegend=False)) # Entry point
 
+# --- 4. Visualize Spur Electrons created along the path ---
+# Show Ionization Markers (crosses) along the track
+fig_capture.add_trace(go.Scatter(x=[pos_trace_x[i] for i in ionization_indices], 
+                                y=[pos_trace_y[i] for i in ionization_indices], 
+                                mode='markers', name='Ionization Event ($e^+$ knocks off $e^-$)',
+                                marker=dict(color='#1e90ff', size=10, symbol='x-open'), opacity=0.7))
+
+# Non-captured Spur Electrons (light blue dots)
+fig_capture.add_trace(go.Scatter(x=spur_electrons_x[:-1], y=spur_electrons_y[:-1], mode='markers', 
+                                name='Free Spur Electrons ($e^-$)', 
+                                marker=dict(color='#1e90ff', size=8), opacity=0.6))
+
+# --- 5. Visualize the final capture act in the Void ---
+# Thermalized Positron (Red) localized in the void edge
+fig_capture.add_trace(go.Scatter(x=[thermal_pos_x], y=[thermal_pos_y], mode='markers', 
+                                marker=dict(color='#ff4757', size=16), name='Thermalized Positron ($e^+$)'))
+
+# The Captured Spur Electron (Distinct Blue dot near the positron)
+fig_capture.add_trace(go.Scatter(x=[captured_ele_x], y=[captured_ele_y], mode='markers', 
+                                marker=dict(color='#1e90ff', size=16), name='Captured Spur Electron ($e^-$)'))
+
+# Vector showing binding/Coulomb Attraction (Binary Star convergence)
+fig_capture.add_annotation(x=captured_ele_x, y=captured_ele_y, ax=thermal_pos_x, ay=thermal_pos_y, xref="x", yref="y", axref="x", ayref="y",
+                           text="", showarrow=True, arrowhead=3, arrowsize=1, arrowwidth=3, arrowcolor="white")
+
+fig_capture.add_annotation(x=(captured_ele_x + thermal_pos_x)/2 + 0.5, y=(captured_ele_y + thermal_pos_y)/2 - 0.5, 
+                           text="(3) Binding via<br>Coulomb Attraction", align="left",
+                           font=dict(size=14, color="white"), showarrow=False)
+
+
+# Layout Polish
 fig_capture.update_layout(
-    height=450,
-    plot_bgcolor='#1e272e',
+    height=600,
+    plot_bgcolor='#1e272e', # Matches dark theme
     paper_bgcolor='#1e272e',
-    xaxis=dict(showgrid=False, zeroline=False, visible=False, range=[-4, 4]),
-    yaxis=dict(showgrid=False, zeroline=False, visible=False, range=[-4, 4]),
-    title="Positron ($e^+$) and Electron ($e^-$) Convergence in the Void",
-    legend=dict(font=dict(color="white"), bgcolor="rgba(0,0,0,0)")
+    xaxis=dict(showgrid=False, zeroline=False, visible=False, range=[-8, 10]),
+    yaxis=dict(showgrid=False, zeroline=False, visible=False, range=[-8, 10]),
+    title="Concept: Spur Electron Capture into Free Volume",
+    legend=dict(font=dict(color="white"), bgcolor="rgba(0,0,0,0)", 
+                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 )
 
 st.plotly_chart(fig_capture, use_container_width=True)
-
-st.markdown(r"""
-
-After this capture, the resulting atom enters one of two quantum spin states. This distinction is the fundamental basis of **PALS** (Positron Annihilation Lifetime Spectroscopy):
-""")
-
-st.markdown("---")
 
 # ---------------------------------------------------------
 # EXISTING VISUALIZATION: Spin States (Corrected Syntax)
