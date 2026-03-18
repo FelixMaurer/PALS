@@ -380,7 +380,7 @@ with tab2:
         
         with col1:
             st.subheader("Para-Positronium (p-Ps)")
-            st.plotly_chart(create_ps_figure(is_ortho=False), use_container_width=True)
+            st.plotly_chart(create_ps_figure(is_ortho=False), use_container_width=True, key="para_ps_orbit")
             st.markdown(r"""
             * **Spin Alignment:** Anti-parallel ($\uparrow \downarrow$)
             * **Total Spin:** $S = 0$ (Singlet)
@@ -392,7 +392,7 @@ with tab2:
         
         with col2:
             st.subheader("Ortho-Positronium (o-Ps)")
-            st.plotly_chart(create_ps_figure(is_ortho=True), use_container_width=True)
+            st.plotly_chart(create_ps_figure(is_ortho=True), use_container_width=True, key="ortho_ps_orbit")
             st.markdown(r"""
             * **Spin Alignment:** Parallel ($\uparrow \uparrow$)
             * **Total Spin:** $S = 1$ (Triplet)
