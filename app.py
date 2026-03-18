@@ -58,78 +58,114 @@ with tab2:
     As the positron loses its kinetic energy and reaches thermal equilibrium, it must figure out where to "settle" within the polyacrylic matrix. Its final location is strictly dictated by the microscopic forces of the polymer.
 
     * **The Repulsive Landscape:** The molecular chains of a polymer consist of dense, positively charged atomic nuclei surrounded by tightly bound electron clouds. The positron experiences massive **Coulomb repulsion** from the positive atomic cores. Furthermore, as it begins interacting with the environment, it faces strong **exchange repulsion** (due to the Pauli exclusion principle) from the bulk electrons of the polymer chains.
-    * **The Free Volume Cavity:** Because of this intense repulsion, the polymer chains act like towering mountains of high potential energy. Seeking the lowest possible energy state, the positron is naturally funneled away from the molecular backbone and pushed into the microscopic empty spaces—the **free volume cavities**—created by the irregular, twisted packing of the chains. 
+    * **The Free Volume Cavity:** Because of this intense repulsion, the polymer chains act like towering mountains of high potential energy. Seeking the lowest possible energy state, the positron is naturally funneled away from the molecular backbone and pushed into the microscopic empty spaces—the **free volume cavities**—created by the irregular packing or defects in the crystal structure. 
     """)
     
-    # --- Visualization of 3D Potential Energy Landscape ---
-    st.subheader("Visualizing the 3D Potential Energy Landscape")
+    st.markdown("---")
     
-    fig_loc = plt.figure(figsize=(12, 7))
-    ax_loc = fig_loc.add_subplot(111, projection='3d')
+    # Create two columns for side-by-side comparison
+    col1, col2 = st.columns(2)
     
-    # Generate a synthetic 3D potential energy landscape
+    # Pre-calculate shared coordinates so the path matches exactly in both plots
     x_grid = np.linspace(0, 10, 100)
     y_grid = np.linspace(0, 10, 100)
     X, Y = np.meshgrid(x_grid, y_grid)
     
-    # Create a high-energy baseline representing the dense bulk polymer
+    # Landscape generation (needed for both to find the exact cavity center)
     Z = np.ones_like(X) * 6.0 
-    
-    # Carve out a deep central "Free Volume Cavity" (a valley in the potential energy)
     Z -= 5.5 * np.exp(-((X - 5)**2 + (Y - 5)**2) / 6.0)
     
-    # Add random high-energy "spikes" representing specific dense atomic clusters
     np.random.seed(42)
     for _ in range(15):
         xc = np.random.uniform(0, 10)
         yc = np.random.uniform(0, 10)
         Z += 3.0 * np.exp(-((X - xc)**2 + (Y - yc)**2) / 1.5)
         
-    Z = np.clip(Z, 0, 10) # Cap the energy values for a cleaner plot
-    
-    # Plot the 3D surface
-    surf = ax_loc.plot_surface(X, Y, Z, cmap='plasma', alpha=0.85, linewidth=0, antialiased=True)
-    
-    # Find the deepest part of the cavity
+    Z = np.clip(Z, 0, 10)
     min_idx = np.unravel_index(np.argmin(Z), Z.shape)
     cavity_x, cavity_y, cavity_z = X[min_idx], Y[min_idx], Z[min_idx]
     
-    # Simulate a path of the positron rolling down into the cavity
-    # Starting high on a "ridge"
+    # Positron Path
     path_t = np.linspace(0, 1, 20)
     start_x, start_y = 8.5, 1.5
     path_x = start_x + (cavity_x - start_x) * path_t
     path_y = start_y + (cavity_y - start_y) * path_t
     
-    # Calculate Z heights along the path with a slight hover effect
-    import scipy.ndimage
-    path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.3
-    
-    # Plot the path and particles
-    ax_loc.plot(path_x, path_y, path_z, color='white', linestyle='--', linewidth=2, label="Positron Localization Path")
-    ax_loc.scatter(path_x[0], path_y[0], path_z[0], color='green', s=100, label="Thermalized Positron")
-    ax_loc.scatter(cavity_x, cavity_y, cavity_z + 0.2, color='red', s=150, marker='*', label="Trapped in Free Volume")
-    
-    # Formatting the 3D plot
-    ax_loc.set_title("Positron Funneled into a Polymer Free Volume Cavity", fontsize=14, pad=20)
-    ax_loc.set_xlabel("X (nm)", labelpad=10)
-    ax_loc.set_ylabel("Y (nm)", labelpad=10)
-    ax_loc.set_zlabel("Potential Energy / Repulsion", labelpad=10)
-    
-    # Remove background grid panes for a cleaner look
-    ax_loc.xaxis.pane.fill = False
-    ax_loc.yaxis.pane.fill = False
-    ax_loc.zaxis.pane.fill = False
-    
-    # Adjust viewing angle for best perspective of the valley
-    ax_loc.view_init(elev=35, azim=-125)
-    
-    # Add a colorbar and legend
-    cbar = fig_loc.colorbar(surf, ax=ax_loc, shrink=0.5, aspect=10, pad=0.1)
-    cbar.set_label('Energy Barrier', rotation=270, labelpad=15)
-    ax_loc.legend(loc="upper left", facecolor='black', labelcolor='white', framealpha=0.7)
-    
-    st.pyplot(fig_loc)
+    # ==========================================
+    # LEFT COLUMN: Physical Crystal Structure
+    # ==========================================
+    with col1:
+        st.subheader("1. Physical Polymer Matrix")
+        
+        fig_struct, ax_struct = plt.subplots(figsize=(6, 6))
+        
+        # Simulate semi-crystalline polymer chains with a void defect in the center
+        for x_chain in np.linspace(1, 9, 9):
+            if x_chain in [4.0, 5.0, 6.0]:
+                # Leave a gap in the middle chains to represent the free volume
+                y1 = np.linspace(0, 3.5, 15)
+                y2 = np.linspace(6.5, 10, 15)
+                ax_struct.plot([x_chain]*len(y1), y1, 'o-', color='#4a69bd', markersize=6, alpha=0.7, linewidth=2)
+                ax_struct.plot([x_chain]*len(y2), y2, 'o-', color='#4a69bd', markersize=6, alpha=0.7, linewidth=2)
+            else:
+                y = np.linspace(0, 10, 40)
+                ax_struct.plot([x_chain]*len(y), y, 'o-', color='#4a69bd', markersize=6, alpha=0.7, linewidth=2)
+
+        # Plot the positron path
+        ax_struct.plot(path_x, path_y, color='white', linestyle='--', linewidth=2.5, label="Positron Path")
+        ax_struct.scatter(path_x[0], path_y[0], color='#2ed573', s=150, zorder=5, label="Thermalized Positron")
+        ax_struct.scatter(cavity_x, cavity_y, color='#ff4757', s=250, marker='*', zorder=5, label="Trapped in Void")
+        
+        ax_struct.set_facecolor('#1e272e') # Dark background to make path pop
+        ax_struct.set_xlim(0, 10)
+        ax_struct.set_ylim(0, 10)
+        ax_struct.set_xlabel("X (nm)")
+        ax_struct.set_ylabel("Y (nm)")
+        ax_struct.grid(False)
+        ax_struct.legend(loc="upper left", facecolor='black', labelcolor='white', framealpha=0.7)
+        
+        st.pyplot(fig_struct)
+
+    # ==========================================
+    # RIGHT COLUMN: Potential Energy Landscape
+    # ==========================================
+    with col2:
+        st.subheader("2. Resulting Energy Landscape")
+        
+        fig_loc = plt.figure(figsize=(6, 6))
+        ax_loc = fig_loc.add_subplot(111, projection='3d')
+        
+        # Plot the 3D surface
+        surf = ax_loc.plot_surface(X, Y, Z, cmap='plasma', alpha=0.85, linewidth=0, antialiased=True)
+        
+        # Calculate Z heights along the path with a slight hover effect
+        path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.3
+        
+        # Plot the path and particles
+        ax_loc.plot(path_x, path_y, path_z, color='white', linestyle='--', linewidth=2, label="Positron Path")
+        ax_loc.scatter(path_x[0], path_y[0], path_z[0], color='#2ed573', s=100, label="Thermalized Positron")
+        ax_loc.scatter(cavity_x, cavity_y, cavity_z + 0.2, color='#ff4757', s=150, marker='*', label="Trapped")
+        
+        # Formatting the 3D plot
+        ax_loc.set_xlabel("X (nm)", labelpad=5)
+        ax_loc.set_ylabel("Y (nm)", labelpad=5)
+        ax_loc.set_zlabel("Energy / Repulsion", labelpad=5)
+        
+        ax_loc.xaxis.pane.fill = False
+        ax_loc.yaxis.pane.fill = False
+        ax_loc.zaxis.pane.fill = False
+        
+        ax_loc.view_init(elev=35, azim=-125)
+        
+        # Adjusted colorbar size for the column layout
+        cbar = fig_loc.colorbar(surf, ax=ax_loc, shrink=0.4, aspect=15, pad=0.1)
+        cbar.set_label('Energy Barrier', rotation=270, labelpad=15)
+        
+        st.pyplot(fig_loc)
+
+    st.markdown("""
+    As seen by comparing the physical matrix (left) to the energy landscape (right), the positron avoids the dense atomic chains (the bright yellow/orange peaks) and rolls down into the physical void (the dark purple valley). Once localized at the bottom of this potential energy well, it is ready for Step 2: forming Positronium.
+    """)
 
     st.markdown("""
     As seen in the 3D landscape above, the positron avoids the bright yellow/orange peaks (the dense polyacrylic chains) and rolls down into the dark purple valley (the physical void). Once localized at the bottom of this potential energy well, it is ready for Step 2: forming Positronium.
