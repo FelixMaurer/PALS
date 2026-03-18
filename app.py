@@ -639,7 +639,7 @@ with tab3:
 
     st.pyplot(fig_decay)
 
-    with st.container():
+with st.container():
     st.markdown(r"""> **The PALS Secret:** The measured lifetime ($\tau_3$) is a proxy for hole size...""")
 # ==========================================
 # TAB 4: PALS Statistics
