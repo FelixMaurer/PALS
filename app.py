@@ -639,9 +639,8 @@ with tab3:
 
     st.pyplot(fig_decay)
 
-    st.info("""
-    **The PALS Secret:** Because the Pick-Off rate depends entirely on how often the o-Ps hits the wall, the measured lifetime ($\tau_3$) becomes a direct proxy for the size of the hole. Large holes = fewer collisions = longer lifetime.
-    """)
+    with st.container():
+    st.markdown(r"""> **The PALS Secret:** The measured lifetime ($\tau_3$) is a proxy for hole size...""")
 # ==========================================
 # TAB 4: PALS Statistics
 # ==========================================
