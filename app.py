@@ -219,9 +219,9 @@ with tab2:
                     xanchor="right", x=1
                 )
             )
+            # Inside with col2
+            st.plotly_chart(fig_loc, use_container_width=True, key="energy_landscape_surface")
             
-            st.plotly_chart(fig_loc, use_container_width=True)
-    
         st.markdown("""
         By comparing the physical matrix (left) to the computed energy landscape (right), you can clearly see how irregular polymer packing dictates the positron's destination. The positron is repelled by the dense ridges of the molecular backbone and naturally flows down into the deep, low-energy basin formed by the structural void. *(You can click and drag the 3D plot to rotate the energy landscape).*
         """)
@@ -341,7 +341,8 @@ with tab2:
             legend=dict(font=dict(color="white"), yanchor="top", y=0.95, xanchor="left", x=0.05)
         )
         
-        st.plotly_chart(fig_spur, use_container_width=True)
+        # In Step 2
+        st.plotly_chart(fig_spur, use_container_width=True, key="spur_model_3d_chart")
         
         # ---------------------------------------------------------
         # EXISTING VISUALIZATION: Spin States (Corrected Syntax)
