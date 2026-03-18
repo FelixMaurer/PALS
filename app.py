@@ -385,6 +385,31 @@ with col2:
     
     The parallel spins forbid simple two-photon decay. Its **extended lifetime** allows it to bounce off cavity walls thousands of times, becoming our "measuring stick."
     """)
+
+st.markdown(r"---")
+st.subheader("Why the 3:1 Ratio? (Quantum Multiplicity)")
+
+st.markdown(r"""
+The reason **Ortho-Positronium (o-Ps)** is formed three times as often as **Para-Positronium (p-Ps)** is a result of quantum statistics. Both the electron and positron are spin-1/2 particles. When they pair up, their spins combine into a total spin ($S$).
+
+The number of possible orientations (states) for a given spin is defined by the **Multiplicity formula**:
+$$g = 2S + 1$$
+
+There are **four** possible quantum spin combinations in total:
+""")
+
+# Create a clean comparison table for the spin states
+st.markdown(r"""
+| State | Total Spin ($S$) | Multiplicity ($2S + 1$) | Spin Alignment | Formation Probability |
+| :--- | :---: | :---: | :---: | :---: |
+| **Para-Positronium** | $0$ | $1$ state | $\uparrow\downarrow$ (Singlet) | **25%** ($1/4$) |
+| **Ortho-Positronium** | $1$ | $3$ states | $\uparrow\uparrow$ (Triplet) | **75%** ($3/4$) |
+""")
+
+st.info(r"""
+**The Statistical Weight:** Because each of the 4 quantum states is equally likely to occur during the random capture process in the polymer spur, o-Ps naturally dominates the population. In PALS data, this 75% "triplet" population is our primary tool for measuring the size of free volume cavities.
+""")
+
 st.markdown("""
 ### Step 3: The Rules of Spin
 Both the electron and the positron are fermions, meaning they each possess an intrinsic angular momentum, or "spin", of $s = 1/2$. When these two particles bind together, quantum mechanics dictates that their spins must combine. 
