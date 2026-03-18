@@ -67,68 +67,59 @@ with tab2:
     col1, col2 = st.columns(2)
     
     # ---------------------------------------------------------
-    # Generate a Realistic Semi-Crystalline Polymer Matrix
+    # Generate a Clean Crystalline Grid (Lattice)
     # ---------------------------------------------------------
-    np.random.seed(42)
+    points_x, points_y = [], []
     chains = []
     
-    # 1. Left Crystalline Lamellae (Ordered folded chains)
-    for x_base in np.linspace(1.0, 3.5, 4):
-        cx, cy = [], []
-        for y_base in np.linspace(0.5, 9.5, 40):
-            cx.append(x_base + 0.08 * np.sin(y_base * 15)) # Polymer backbone zig-zag
-            cy.append(y_base)
-        chains.append((cx, cy))
-        
-    # 2. Right Crystalline Lamellae
-    for x_base in np.linspace(6.5, 9.0, 4):
-        cx, cy = [], []
-        for y_base in np.linspace(0.5, 9.5, 40):
-            cx.append(x_base + 0.08 * np.sin(y_base * 15))
-            cy.append(y_base)
-        chains.append((cx, cy))
-        
-    # 3. Disordered Amorphous Region (Leaving a central void)
-    # Top bridging chains
-    for _ in range(4):
-        cx = np.linspace(3.5, 6.5, 15)
-        cy = 8.5 + np.random.normal(0, 0.4, 15)
-        chains.append((cx, cy))
-    # Bottom bridging chains
-    for _ in range(4):
-        cx = np.linspace(3.5, 6.5, 15)
-        cy = 1.5 + np.random.normal(0, 0.4, 15)
-        chains.append((cx, cy))
-
-    # Flatten coordinates to compute the energy landscape
-    all_px, all_py = [], []
-    for cx, cy in chains:
-        all_px.extend(cx)
-        all_py.extend(cy)
+    # 1. Generate atomic nodes, leaving a rectangular void in the center
+    for x_pt in np.linspace(1, 9, 9):
+        for y_pt in np.linspace(0.5, 9.5, 10):
+            # Skip points that fall inside the void
+            if 3.5 < x_pt < 6.5 and 3.5 < y_pt < 6.5:
+                continue
+            points_x.append(x_pt)
+            points_y.append(y_pt)
+            
+    # 2. Generate connecting lines to draw the grid
+    # Vertical grid lines
+    for x_line in np.linspace(1, 9, 9):
+        if 3.5 < x_line < 6.5:
+            chains.append(([x_line, x_line], [0.5, 3.5]))
+            chains.append(([x_line, x_line], [6.5, 9.5]))
+        else:
+            chains.append(([x_line, x_line], [0.5, 9.5]))
+            
+    # Horizontal grid lines
+    for y_line in np.linspace(0.5, 9.5, 10):
+        if 3.5 < y_line < 6.5:
+            chains.append(([1.0, 3.5], [y_line, y_line]))
+            chains.append(([6.5, 9.0], [y_line, y_line]))
+        else:
+            chains.append(([1.0, 9.0], [y_line, y_line]))
 
     # ---------------------------------------------------------
-    # Compute Energy Landscape based STRICTLY on chain proximity
+    # Compute Energy Landscape based strictly on atomic nodes
     # ---------------------------------------------------------
     x_grid = np.linspace(0, 10, 100)
     y_grid = np.linspace(0, 10, 100)
     X, Y = np.meshgrid(x_grid, y_grid)
     Z = np.zeros_like(X)
     
-    # Sum the repulsive potentials (Gaussian approximation of atomic repulsion)
-    for px, py in zip(all_px, all_py):
-        Z += 0.45 * np.exp(-((X - px)**2 + (Y - py)**2) / 0.5)
+    # Sum the repulsive potentials around each atomic node
+    for px, py in zip(points_x, points_y):
+        Z += 2.5 * np.exp(-((X - px)**2 + (Y - py)**2) / 0.4)
         
-    # Add a small baseline energy and cap maximum repulsion
-    Z += 0.5
-    Z = np.clip(Z, 0, 7)
+    Z += 0.5 # Baseline energy
+    Z = np.clip(Z, 0, 7) # Cap maximum repulsion for cleaner plotting
     
     # Find the deepest part of the free volume cavity
     min_idx = np.unravel_index(np.argmin(Z), Z.shape)
     cavity_x, cavity_y, cavity_z = X[min_idx], Y[min_idx], Z[min_idx]
     
-    # Calculate Positron Path (from a high-density area into the void)
+    # Calculate Positron Path (from a high-density crystal area into the void)
     path_t = np.linspace(0, 1, 25)
-    start_x, start_y = 8.5, 5.0 # Starting in the right-side crystal
+    start_x, start_y = 8.5, 5.0 
     path_x = start_x + (cavity_x - start_x) * path_t
     path_y = start_y + (cavity_y - start_y) * path_t
     
@@ -136,13 +127,16 @@ with tab2:
     # LEFT COLUMN: Physical Crystal Structure
     # ==========================================
     with col1:
-        st.subheader("1. Semi-Crystalline Matrix")
+        st.subheader("1. Crystalline Lattice")
         
         fig_struct, ax_struct = plt.subplots(figsize=(6, 6))
         
-        # Plot the polymer chains
+        # Plot the grid lines
         for cx, cy in chains:
-            ax_struct.plot(cx, cy, 'o-', color='#4a69bd', markersize=4, alpha=0.8, linewidth=1.5)
+            ax_struct.plot(cx, cy, '-', color='#4a69bd', alpha=0.6, linewidth=1.5)
+            
+        # Plot the atomic nodes
+        ax_struct.scatter(points_x, points_y, color='#4a69bd', s=35, zorder=3)
 
         # Plot the positron path
         ax_struct.plot(path_x, path_y, color='white', linestyle='--', linewidth=2.5, label="Positron Path")
