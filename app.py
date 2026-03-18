@@ -169,7 +169,7 @@ with tab2:
             z=Z, x=x_grid, y=y_grid, 
             colorscale='Plasma', 
             opacity=0.9,
-            colorbar=dict(title="Energy Barrier", shrink=0.5)
+            colorbar=dict(title="Energy Barrier", len=0.5) # Changed 'shrink' to 'len'
         ))
 
         # Positron Path
