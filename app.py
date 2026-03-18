@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import erfc
+import matplotlib.patches as patches
 
 # --- App Configuration ---
 st.set_page_config(page_title="Positron Annihilation Explorer", layout="wide")
@@ -13,7 +14,7 @@ st.markdown("Explore the lifecycle of a positron, from its turbulent path throug
 tab1, tab2, tab3, tab4 = st.tabs([
     "1. Path Through Matter", 
     "2. Positronium Formation", 
-    "3. The Triplet State", 
+    "3. Decay Rules & Pick-Off", 
     "4. PALS Statistics"
 ])
 
@@ -23,7 +24,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 with tab1:
     st.header("Thermalization: The Path Through Matter")
     st.markdown("""
-    When a high-energy positron is emitted into a polymer like polyacrylic, it doesn't just stop immediately. It undergoes a series of rapid, inelastic collisions with the polymer chains. 
+    When a high-energy positron is emitted into a polymer, it undergoes a series of rapid, inelastic collisions with the polymer chains. 
     It ionizes atoms and excites electrons, losing kinetic energy at each step until it reaches thermal equilibrium (thermalization). This erratic journey is known as a **random walk**.
     """)
     
@@ -50,79 +51,87 @@ with tab1:
 # TAB 2: Positronium Formation
 # ==========================================
 with tab2:
-    st.header("Localization & Positronium Formation")
+    st.header("Localization & The Quantum States of Positronium")
     st.markdown("""
-    Once the positron slows down (red dot in the previous tab), it seeks out regions of low electron density due to the strong exchange repulsion from the dense electron clouds of the polymer chains. 
-    It gets trapped in "free volume" cavities. Here, it can capture an electron to form **Positronium (Ps)**.
+    Once the positron slows down, it gets trapped in "free volume" cavities—microscopic empty spaces between polymer chains. Here, it captures an electron to form a hydrogen-like bound state called **Positronium (Ps)**. 
+    
+    Because the electron and positron are both fermions (spin-1/2 particles), they can combine in two distinct quantum states depending on how their spins align. This alignment dictates their energy levels, quantum numbers, and ultimately, how they die.
     """)
     
+    # Quantum Parameters Comparison
     col1, col2 = st.columns(2)
     with col1:
-        st.info("**Para-positronium (p-Ps)** \n\n* Singlet state \n* Anti-parallel spins (S=0) \n* Intrinsic lifetime: ~125 ps \n* Decays into 2 gamma rays.")
+        st.info("""
+        ### Para-Positronium (p-Ps)
+        **The Singlet State**
+        * **Spins:** Anti-Parallel ($\\uparrow \\downarrow$)
+        * **Total Spin ($S$):** 0
+        * **Magnetic Quantum Number ($m_s$):** 0
+        * **Orbital Angular Momentum ($L$):** 0 (Ground state)
+        * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
+        * **Charge Parity ($C = (-1)^{L+S}$):** +1 (Even)
+        * **Vacuum Lifetime:** ~125 ps
+        """)
     with col2:
-        st.warning("**Ortho-positronium (o-Ps)** \n\n* Triplet state \n* Parallel spins (S=1) \n* Vacuum lifetime: ~142 ns \n* Trapped in polymer cavities.")
+        st.warning("""
+        ### Ortho-Positronium (o-Ps)
+        **The Triplet State**
+        * **Spins:** Parallel ($\\uparrow \\uparrow$)
+        * **Total Spin ($S$):** 1
+        * **Magnetic Quantum Number ($m_s$):** -1, 0, or +1
+        * **Orbital Angular Momentum ($L$):** 0 (Ground state)
+        * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
+        * **Charge Parity ($C = (-1)^{L+S}$):** -1 (Odd)
+        * **Vacuum Lifetime:** ~142 ns
+        """)
 
     st.divider()
-    st.subheader("Visualizing Positronium and its Path in a Cavity")
+    st.subheader("Hyperfine Splitting & Spin Visualization")
     
-    # Generate the dual-panel sketch for Positronium
-    fig_ps, (ax_ps1, ax_ps2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig_ps, (ax_split, ax_spin) = plt.subplots(1, 2, figsize=(12, 5))
     
-    # --- Left Panel: Positronium Bound State ---
-    ax_ps1.set_title("Positronium (Ps) Bound State")
-    ax_ps1.axis('off')
-    ax_ps1.set_xlim(-1.5, 1.5)
-    ax_ps1.set_ylim(-1.5, 1.5)
+    # Left Panel: Energy Splitting
+    ax_split.set_title("Hyperfine Energy Splitting")
+    ax_split.axis('off')
+    ax_split.set_xlim(0, 5)
+    ax_split.set_ylim(-1, 3)
     
-    # Orbit
-    circle = plt.Circle((0, 0), 1, color='gray', fill=False, linestyle='--', alpha=0.5)
-    ax_ps1.add_patch(circle)
+    # Energy levels
+    ax_split.hlines(0, 1, 2, color='black', linestyles='dashed')
+    ax_split.text(0.5, 0, "Unperturbed\nGround State", va='center')
     
-    # Particles
-    ax_ps1.plot(1, 0, 'bo', markersize=15, label='Electron ($e^-$)')
-    ax_ps1.plot(-1, 0, 'ro', markersize=15, label='Positron ($e^+$)')
+    ax_split.hlines(1.5, 3, 4, color='orange', linewidth=3)
+    ax_split.text(4.2, 1.5, "Triplet (o-Ps)\nS=1", va='center')
     
-    # Spins (Showing Ortho-Ps with parallel spins)
-    ax_ps1.arrow(1, 0.2, 0, 0.3, head_width=0.08, color='blue', lw=2, length_includes_head=True)
-    ax_ps1.arrow(-1, 0.2, 0, 0.3, head_width=0.08, color='red', lw=2, length_includes_head=True)
-    ax_ps1.text(0, -1.3, "Ortho-Positronium (Parallel Spins)", ha='center', fontsize=11, fontweight='bold')
-    ax_ps1.legend(loc='upper right', fontsize='small')
+    ax_split.hlines(-0.5, 3, 4, color='blue', linewidth=3)
+    ax_split.text(4.2, -0.5, "Singlet (p-Ps)\nS=0", va='center')
     
-    # --- Right Panel: Bouncing in Cavity ---
-    ax_ps2.set_title("o-Ps Path in Polymer Free Volume")
-    ax_ps2.axis('off')
-    ax_ps2.set_xlim(-1.5, 1.5)
-    ax_ps2.set_ylim(-1.5, 1.5)
+    # Splitting lines
+    ax_split.plot([2, 3], [0, 1.5], 'k--', alpha=0.5)
+    ax_split.plot([2, 3], [0, -0.5], 'k--', alpha=0.5)
     
-    # Polymer Cavity Wall
-    cavity = plt.Circle((0, 0), 1.2, color='lightblue', fill=True, alpha=0.4)
-    ax_ps2.add_patch(cavity)
-    ax_ps2.text(0, 1.3, "Polymer Chains (Electron Dense)", ha='center', color='darkblue', fontsize=10)
+    # Energy difference text
+    ax_split.annotate(r'$\Delta E \approx 8.4 \times 10^{-4}$ eV', xy=(3.5, 0.5), ha='center', color='red', fontsize=10)
     
-    # Generate bouncing path for the neutral Ps atom
-    np.random.seed(101) # Seed for reproducible random path
-    num_bounces = 6
-    angles = np.random.uniform(0, 2*np.pi, num_bounces)
-    r_cavity = 1.2
+    # Right Panel: Spin Alignment Sketch
+    ax_spin.set_title("Spin Alignments in Ground State")
+    ax_spin.axis('off')
+    ax_spin.set_xlim(-2, 2)
+    ax_spin.set_ylim(-2, 2)
     
-    # Start near the center of the cavity
-    path_x, path_y = [0.1], [-0.1]
+    # Para
+    ax_spin.text(-1, 1.2, "Para-Ps (Anti-Parallel)", ha='center', fontweight='bold')
+    ax_spin.plot(-1.3, 0, 'ro', markersize=20, alpha=0.7) # Positron
+    ax_spin.plot(-0.7, 0, 'bo', markersize=20, alpha=0.7) # Electron
+    ax_spin.arrow(-1.3, -0.3, 0, 0.6, head_width=0.1, color='black', lw=2) # Spin Up
+    ax_spin.arrow(-0.7, 0.3, 0, -0.6, head_width=0.1, color='black', lw=2) # Spin Down
     
-    # Calculate chord points for bounces
-    for angle in angles:
-        path_x.append(r_cavity * np.cos(angle))
-        path_y.append(r_cavity * np.sin(angle))
-        
-    ax_ps2.plot(path_x, path_y, 'k--', linewidth=1.5, alpha=0.6)
-    ax_ps2.plot(path_x[0], path_y[0], 'go', markersize=8, label="Ps Formation")
-    
-    # Add dots for wall bounces
-    ax_ps2.plot(path_x[1:-1], path_y[1:-1], 'ko', markersize=4, alpha=0.5)
-    
-    # The final point is the pick-off annihilation
-    ax_ps2.plot(path_x[-1], path_y[-1], 'r*', markersize=18, label="Pick-off Annihilation")
-    
-    ax_ps2.legend(loc='lower left', fontsize='small')
+    # Ortho
+    ax_spin.text(1, 1.2, "Ortho-Ps (Parallel)", ha='center', fontweight='bold')
+    ax_spin.plot(0.7, 0, 'ro', markersize=20, alpha=0.7) # Positron
+    ax_spin.plot(1.3, 0, 'bo', markersize=20, alpha=0.7) # Electron
+    ax_spin.arrow(0.7, -0.3, 0, 0.6, head_width=0.1, color='black', lw=2) # Spin Up
+    ax_spin.arrow(1.3, -0.3, 0, 0.6, head_width=0.1, color='black', lw=2) # Spin Up
     
     st.pyplot(fig_ps)
 
@@ -130,23 +139,92 @@ with tab2:
 # TAB 3: The Triplet State (Decay Rules)
 # ==========================================
 with tab3:
-    st.header("Why Ortho-Positronium Cannot Decay Directly")
-    st.markdown("""
-    The triplet state (o-Ps) cannot decay directly into the standard 2 gamma-ray photons because of the strict conservation of **Charge Parity (C-parity)**.
-    """)
-    
-    st.latex(r"C = (-1)^{L+S}")
+    st.header("Charge Parity & The Forbidden Decay")
     
     st.markdown("""
-    * For o-Ps, the total spin $S = 1$, and orbital angular momentum $L = 0$.
-    * Therefore, its C-parity is $(-1)^{0+1} = -1$.
-    * A photon has a C-parity of $-1$. To conserve C-parity, o-Ps *must* decay into an **odd** number of photons.
-    
-    Because decaying into 1 photon violates momentum conservation, o-Ps is forced to decay into **3 photons**, which is an incredibly slow quantum process. 
-    
-    ### The Pick-Off Loophole
-    In polyacrylics, the o-Ps doesn't survive long enough for the 3-photon decay. It bounces against the cavity walls and "picks off" an electron with an opposite spin from the polymer chain, allowing a fast 2-photon annihilation.
+    In quantum mechanics, when particles annihilate into photons, a property called **Charge Parity (C-parity)** must be conserved. 
+    A single photon has a C-parity of $-1$. Therefore, an event producing $n$ photons has a total C-parity of $(-1)^n$.
     """)
+    
+    st.latex(r"C_{\text{Positronium}} = (-1)^{L+S}")
+    
+    st.markdown("""
+    * **Para-Ps ($S=0$):** $C = (-1)^{0+0} = +1$. It can easily decay into **2 photons** ($(-1)^2 = +1$).
+    * **Ortho-Ps ($S=1$):** $C = (-1)^{0+1} = -1$. It *must* decay into an odd number of photons. 
+    
+    **Why not 1 photon?** A system at rest cannot emit a single photon without violating the conservation of momentum. Therefore, isolated ortho-positronium is forced to decay into **3 photons**, which is mathematically highly improbable and takes a very long time (~142 ns).
+    """)
+
+    st.divider()
+    st.header("The Pick-Off Loophole in Matter")
+    st.markdown("""
+    When o-Ps is trapped inside a polymer cavity, it doesn't wait 142 ns to decay. As it bounces around, its outer positron penetrates the electron clouds of the polymer chains lining the cavity wall. 
+    
+    If the positron encounters a polymer electron with an **opposite spin** to its own, it abandons its original partner, forms a temporary pseudo-singlet state with the wall electron, and instantly annihilates via the much faster 2-photon pathway. This is called **Pick-Off Annihilation**.
+    """)
+
+    fig_decay, (ax_vac, ax_wall) = plt.subplots(1, 2, figsize=(12, 6))
+    
+    # --- Left Panel: Vacuum Decay (3 photons) ---
+    ax_vac.set_title("Direct Vacuum Decay: 3 Photons (Slow)")
+    ax_vac.axis('off')
+    ax_vac.set_xlim(-2, 2)
+    ax_vac.set_ylim(-2, 2)
+    
+    # Draw o-Ps
+    ax_vac.plot(0, 0, 'ro', markersize=12, label='Positron')
+    ax_vac.plot(0.2, 0.2, 'bo', markersize=12, label='Electron')
+    ax_vac.text(0, -0.4, "o-Ps (Total Spin=1)", ha='center')
+    
+    # Draw 3 Photons
+    angles = [np.pi/2, 7*np.pi/6, 11*np.pi/6]
+    for angle in angles:
+        x_w = [0.2 + i*0.2*np.cos(angle) for i in range(8)]
+        y_w = [0.2 + i*0.2*np.sin(angle) + 0.05*np.sin(i*np.pi) for i in range(8)]
+        ax_vac.plot(x_w, y_w, 'y-', lw=2)
+    ax_vac.text(1, 1, r"$\gamma$", color='goldenrod', fontsize=16)
+    ax_vac.text(-1.5, -0.5, r"$\gamma$", color='goldenrod', fontsize=16)
+    ax_vac.text(1, -1.5, r"$\gamma$", color='goldenrod', fontsize=16)
+    ax_vac.legend(loc='upper left', fontsize='small')
+
+    # --- Right Panel: Pick-off in matter ---
+    ax_wall.set_title("Pick-Off in Matter: 2 Photons (Fast)")
+    ax_wall.axis('off')
+    ax_wall.set_xlim(-2, 2)
+    ax_wall.set_ylim(-2, 2)
+    
+    # Polymer Wall
+    rect = patches.Rectangle((0.5, -2), 1.5, 4, linewidth=1, edgecolor='none', facecolor='lightgray', alpha=0.5)
+    ax_wall.add_patch(rect)
+    ax_wall.text(1.25, 1.5, "Polymer Wall\n(Dense Electrons)", ha='center')
+    
+    # Path of o-Ps
+    ax_wall.plot([-1.5, 0.5], [0, 0], 'k--', lw=1)
+    ax_wall.plot(-1.5, 0, 'go', markersize=8) # Start point
+    ax_wall.text(-1.5, 0.2, "Trapped\no-Ps", ha='center')
+    
+    # Original o-Ps pair
+    ax_wall.plot(0.5, 0, 'ro', markersize=12) # Positron hits wall
+    ax_wall.plot(0.3, -0.2, 'bo', markersize=12, alpha=0.3) # Original electron left behind
+    ax_wall.arrow(0.5, 0.2, 0, 0.3, head_width=0.08, color='red') # Positron spin up
+    
+    # Pick-off electron from wall
+    ax_wall.plot(0.7, 0, 'bo', markersize=12) 
+    ax_wall.arrow(0.7, 0.5, 0, -0.3, head_width=0.08, color='blue') # Wall electron spin down
+    
+    # 2 Photons emitted
+    x_w1 = [0.6 + i*0.2*np.cos(np.pi/4) for i in range(6)]
+    y_w1 = [0 + i*0.2*np.sin(np.pi/4) + 0.05*np.sin(i*np.pi) for i in range(6)]
+    ax_wall.plot(x_w1, y_w1, 'y-', lw=2)
+    
+    x_w2 = [0.6 + i*0.2*np.cos(5*np.pi/4) for i in range(6)]
+    y_w2 = [0 + i*0.2*np.sin(5*np.pi/4) + 0.05*np.sin(i*np.pi) for i in range(6)]
+    ax_wall.plot(x_w2, y_w2, 'y-', lw=2)
+    
+    ax_wall.text(1.5, 1, r"$\gamma$", color='goldenrod', fontsize=16)
+    ax_wall.text(-0.5, -1, r"$\gamma$", color='goldenrod', fontsize=16)
+
+    st.pyplot(fig_decay)
 
 # ==========================================
 # TAB 4: PALS Statistics
@@ -154,7 +232,7 @@ with tab3:
 with tab4:
     st.header("PALS Statistics: Multi-Component Spectra")
     st.markdown("""
-    Positron Annihilation Lifetime Spectroscopy (PALS) measures the time difference between the positron's emission and its annihilation. Because there are different decay pathways, the resulting statistical spectrum is a combination of several exponential decays convolved with the detector's timing resolution (a Gaussian smearing effect).
+    Positron Annihilation Lifetime Spectroscopy (PALS) measures the time difference between the positron's emission and its annihilation. Because there are different decay pathways, the resulting statistical spectrum is a combination of several exponential decays convolved with the detector's timing resolution.
     """)
     
     st.latex(r"N(t) = B + \sum_{i=1}^{k} A_i \exp\left(-\frac{t-t_0}{\tau_i}\right) \text{erfc}\left( \frac{1}{\sqrt{2}} \left( \frac{\sigma}{\tau_i} - \frac{t-t_0}{\sigma} \right) \right)")
@@ -162,17 +240,17 @@ with tab4:
     st.markdown("""
     When building mathematical models to fit these spectra, navigating the parameter space can be difficult. In specialized optimization routines, rather than varying all individual parameters freely, it is often much more robust to optimize for only the ratio between specific component states (such as the ratio between the M0 and M2 components). 
     
-    Furthermore, when correlating these lifetimes to physical polymer structures, you generally want to isolate variables. For example, keeping other matrix properties constant so that only the repulsion is changed allows researchers to cleanly observe how atomic repulsive forces directly dictate cavity size and o-Ps pick-off rates.
+    Furthermore, when correlating these lifetimes to physical polymer structures, keeping other matrix properties constant so that only the repulsion is changed allows researchers to cleanly observe how atomic repulsive forces directly dictate cavity size and o-Ps pick-off rates.
     """)
     
     st.subheader("Simulated Multi-Component Spectrum (Realistic Instrument Resolution)")
     
     # Generate Realistic PALS Data
-    x_data = np.linspace(12, 25, 1000) # Time in nanoseconds
-    sigma = 0.297 / 2.35 # Typical detector resolution
-    t0 = 13.5 # Time zero
+    x_data = np.linspace(12, 25, 1000)
+    sigma = 0.297 / 2.35 
+    t0 = 13.5 
     
-    # Components (Amplitudes and Lifetimes in ns)
+    # Components
     A1, tau1 = 25000, 0.25  # p-Ps
     A2, tau2 = 1700, 0.61   # Free positron
     A3, tau3 = 350, 1.68    # o-Ps pick-off
@@ -185,7 +263,6 @@ with tab4:
     
     total_decay = comp1 + comp2 + comp3 + B
     
-    # Add Poisson noise to simulate real statistics
     np.random.seed(42)
     noisy_decay = np.random.poisson(np.maximum(total_decay, 0))
     
@@ -194,7 +271,7 @@ with tab4:
     ax2.plot(x_data, total_decay, 'r-', linewidth=2, label='Total Fit Model')
     ax2.plot(x_data, comp1, '--', label=f'Component 1: p-Ps (~{tau1*1000:.0f} ps)')
     ax2.plot(x_data, comp2, '--', label=f'Component 2: Free e+ (~{tau2*1000:.0f} ps)')
-    ax2.plot(x_data, comp3, '--', label=f'Component 3: o-Ps (~{tau3:.2f} ns)')
+    ax2.plot(x_data, comp3, '--', label=f'Component 3: o-Ps Pick-off (~{tau3:.2f} ns)')
     
     ax2.set_yscale('log')
     ax2.set_xlabel('Time (ns)')
