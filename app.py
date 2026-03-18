@@ -458,56 +458,76 @@ with col2:
 st.divider()
 st.markdown("""
 ### Step 5: Hyperfine Splitting
-Because the electron and positron are spinning, they act like tiny bar magnets. In the Triplet state (o-Ps), the "magnets" are aligned, which creates a slightly repulsive magnetic interaction. In the Singlet state (p-Ps), the opposite alignment is magnetically attractive. 
-
-This magnetic spin-spin interaction causes a slight difference in their energy levels, known as **Hyperfine Splitting**. Ortho-positronium sits at a slightly higher energy level than para-positronium.
+The energy levels of Positronium are not a single "line." Because both particles have spin, they interact magnetically. This splits the ground state into two distinct sub-levels.
 """)
 
+# Create the refined visualization
 fig_ps, (ax_split, ax_spin) = plt.subplots(1, 2, figsize=(12, 5))
+fig_ps.patch.set_facecolor('#0e1117') # Match Streamlit dark theme if needed
 
-# Left Panel: Energy Splitting
-ax_split.set_title("Hyperfine Energy Splitting")
+# --- Left Panel: Energy Splitting ---
+ax_split.set_title("Hyperfine Energy Splitting", color='white', fontsize=14)
+ax_split.set_facecolor('#0e1117')
 ax_split.axis('off')
 ax_split.set_xlim(0, 5)
 ax_split.set_ylim(-1, 3)
 
-# Energy levels
-ax_split.hlines(0, 1, 2, color='black', linestyles='dashed')
-ax_split.text(0.5, 0, "Unperturbed\nGround State", va='center')
+# The "Baseline" - The n=1 Bohr level (-6.8 eV)
+ax_split.hlines(0, 1, 2, color='gray', linestyles='dashed', alpha=0.7)
+ax_split.text(0.5, 0, "Bohr Level (n=1)\nNo Spin Interaction", 
+             va='center', ha='right', fontsize=9, color='gray')
 
-ax_split.hlines(1.5, 3, 4, color='orange', linewidth=3)
-ax_split.text(4.2, 1.5, "Triplet (o-Ps)\nS=1", va='center')
+# The split levels
+# Ortho is red (higher energy due to magnetic repulsion)
+ax_split.hlines(1.5, 3, 4, color='#ff4757', linewidth=4) 
+ax_split.text(4.2, 1.5, r"$\mathbf{o-Ps}$ (Triplet)" + "\n$S=1$", 
+             va='center', fontweight='bold', color='white')
 
-ax_split.hlines(-0.5, 3, 4, color='blue', linewidth=3)
-ax_split.text(4.2, -0.5, "Singlet (p-Ps)\nS=0", va='center')
+# Para is blue (lower energy due to magnetic attraction)
+ax_split.hlines(-0.5, 3, 4, color='#4a69bd', linewidth=4) 
+ax_split.text(4.2, -0.5, r"$\mathbf{p-Ps}$ (Singlet)" + "\n$S=0$", 
+             va='center', fontweight='bold', color='white')
 
-# Splitting lines
-ax_split.plot([2, 3], [0, 1.5], 'k--', alpha=0.5)
-ax_split.plot([2, 3], [0, -0.5], 'k--', alpha=0.5)
+# Connection/Splitting lines
+ax_split.plot([2, 3], [0, 1.5], 'w--', alpha=0.3)
+ax_split.plot([2, 3], [0, -0.5], 'w--', alpha=0.3)
 
-# Energy difference text
-ax_split.annotate(r'$\Delta E \approx 8.4 \times 10^{-4}$ eV', xy=(3.5, 0.5), ha='center', color='red', fontsize=10)
+# Energy difference label
+ax_split.annotate('', xy=(3.5, 1.5), xytext=(3.5, -0.5), 
+                 arrowprops=dict(arrowstyle='<->', color='#ffa502', lw=2))
+ax_split.text(3.6, 0.5, r"$\Delta E_{hfs} \approx 8.4 \times 10^{-4}$ eV", 
+             color='#ffa502', fontsize=10, fontweight='bold', va='center')
 
-# Right Panel: Spin Alignment Sketch
-ax_spin.set_title("Spin Alignments in Ground State")
+# --- Right Panel: Spin Alignment Sketch ---
+ax_spin.set_title("Spin Alignments (n=1)", color='white', fontsize=14)
+ax_spin.set_facecolor('#0e1117')
 ax_spin.axis('off')
 ax_spin.set_xlim(-2, 2)
 ax_spin.set_ylim(-2, 2)
 
-# Para
-ax_spin.text(-1, 1.2, "Para-Ps (Anti-Parallel)", ha='center', fontweight='bold')
-ax_spin.plot(-1.3, 0, 'ro', markersize=20, alpha=0.7) # Positron
-ax_spin.plot(-0.7, 0, 'bo', markersize=20, alpha=0.7) # Electron
-ax_spin.arrow(-1.3, -0.3, 0, 0.6, head_width=0.1, color='black', lw=2) # Spin Up
-ax_spin.arrow(-0.7, 0.3, 0, -0.6, head_width=0.1, color='black', lw=2) # Spin Down
+# Para-Ps Layout
+ax_spin.text(-1, 1.4, "Para-Ps (Singlet)", ha='center', color='white', fontweight='bold')
+ax_spin.text(-1, 1.1, "Anti-Parallel", ha='center', color='gray', fontsize=9)
+ax_spin.plot(-1.3, 0, 'ro', markersize=22, alpha=0.8) # Positron
+ax_spin.plot(-0.7, 0, 'bo', markersize=22, alpha=0.8) # Electron
+ax_spin.text(-1.3, 0, r"$e^+$", color='white', ha='center', va='center', fontweight='bold')
+ax_spin.text(-0.7, 0, r"$e^-$", color='white', ha='center', va='center', fontweight='bold')
+# Arrows
+ax_spin.arrow(-1.3, -0.4, 0, 0.5, head_width=0.1, color='white', lw=2) # Up
+ax_spin.arrow(-0.7, 0.4, 0, -0.5, head_width=0.1, color='white', lw=2) # Down
 
-# Ortho
-ax_spin.text(1, 1.2, "Ortho-Ps (Parallel)", ha='center', fontweight='bold')
-ax_spin.plot(0.7, 0, 'ro', markersize=20, alpha=0.7) # Positron
-ax_spin.plot(1.3, 0, 'bo', markersize=20, alpha=0.7) # Electron
-ax_spin.arrow(0.7, -0.3, 0, 0.6, head_width=0.1, color='black', lw=2) # Spin Up
-ax_spin.arrow(1.3, -0.3, 0, 0.6, head_width=0.1, color='black', lw=2) # Spin Up
+# Ortho-Ps Layout
+ax_spin.text(1, 1.4, "Ortho-Ps (Triplet)", ha='center', color='white', fontweight='bold')
+ax_spin.text(1, 1.1, "Parallel", ha='center', color='gray', fontsize=9)
+ax_spin.plot(0.7, 0, 'ro', markersize=22, alpha=0.8) # Positron
+ax_spin.plot(1.3, 0, 'bo', markersize=22, alpha=0.8) # Electron
+ax_spin.text(0.7, 0, r"$e^+$", color='white', ha='center', va='center', fontweight='bold')
+ax_spin.text(1.3, 0, r"$e^-$", color='white', ha='center', va='center', fontweight='bold')
+# Arrows
+ax_spin.arrow(0.7, -0.4, 0, 0.5, head_width=0.1, color='white', lw=2) # Up
+ax_spin.arrow(1.3, -0.4, 0, 0.5, head_width=0.1, color='white', lw=2) # Up
 
+plt.tight_layout()
 st.pyplot(fig_ps)
 
 # ==========================================
