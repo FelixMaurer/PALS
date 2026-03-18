@@ -229,7 +229,7 @@ with tab2:
     st.markdown("""
     As seen in the 3D landscape above, the positron avoids the bright yellow/orange peaks (the dense polyacrylic chains) and rolls down into the dark purple valley (the physical void). Once localized at the bottom of this potential energy well, it is ready for Step 2: forming Positronium.
     """)
-    # # ==========================================
+# ==========================================
 # STEP 2: Positronium Formation
 # ==========================================
 st.header("Step 2: Capturing a Partner & Forming Positronium")
