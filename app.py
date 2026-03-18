@@ -314,51 +314,7 @@ Once the positron and electron are bound, they form a binary system orbiting a m
 
 st.markdown("---")
 
-# ---------------------------------------------------------
-# SIDE-BY-SIDE SPIN STATES
-# ---------------------------------------------------------
-col1, col2 = st.columns(2)
 
-def create_ps_orbit(is_ortho):
-    theta = np.linspace(0, 2 * np.pi, 100)
-    fig = go.Figure()
-    # Orbit
-    fig.add_trace(go.Scatter3d(x=np.cos(theta), y=np.sin(theta), z=np.zeros(100), 
-                               mode='lines', line=dict(color='gray', dash='dash')))
-    # Positron + Spin Up
-    fig.add_trace(go.Scatter3d(x=[1], y=[0], z=[0], mode='markers', marker=dict(size=12, color='#ff4757')))
-    fig.add_trace(go.Cone(x=[1], y=[0], z=[0.8], u=[0], v=[0], w=[0.5], sizeref=0.3, showscale=False, colorscale=[[0, '#ff4757'], [1, '#ff4757']]))
-    
-    # Electron + Spin (Up for Ortho, Down for Para)
-    z_cone = 0.8 if is_ortho else -0.8
-    w_cone = 0.5 if is_ortho else -0.5
-    fig.add_trace(go.Scatter3d(x=[-1], y=[0], z=[0], mode='markers', marker=dict(size=12, color='#4a69bd')))
-    fig.add_trace(go.Cone(x=[-1], y=[0], z=[z_cone], u=[0], v=[0], w=[w_cone], sizeref=0.3, showscale=False, colorscale=[[0, '#4a69bd'], [1, '#4a69bd']]))
-    
-    fig.update_layout(height=350, margin=dict(l=0, r=0, b=0, t=0), scene=dict(xaxis_visible=False, yaxis_visible=False, zaxis_visible=False), showlegend=False)
-    return fig
-
-with col1:
-    st.subheader("Para-Positronium (p-Ps)")
-    st.plotly_chart(create_ps_orbit(is_ortho=False), use_container_width=True)
-    st.markdown(r"""
-    * **Spin:** Anti-parallel ($\uparrow \downarrow$)
-    * **State:** Singlet ($S=0$)
-    * **Lifetime:** ~0.125 ns
-    
-    Too short to probe voids.
-    """)
-
-with col2:
-    st.subheader("Ortho-Positronium (o-Ps)")
-    st.plotly_chart(create_ps_orbit(is_ortho=True), use_container_width=True)
-    st.markdown(r"""
-    * **Spin:** Parallel ($\uparrow \uparrow$)
-    * **State:** Triplet ($S=1$)
-    * **Lifetime:** ~142 ns
-    
-    The **perfect probe** for free volume.
-    """)
 # ---------------------------------------------------------
 # EXISTING VISUALIZATION: Spin States (Corrected Syntax)
 # ---------------------------------------------------------
