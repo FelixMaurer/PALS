@@ -105,446 +105,446 @@ with tab2:
         if len(segment_x) > 1:
             chain_segments.append((segment_x, segment_y))
 
-        # ---------------------------------------------------------
-        # Compute Energy Landscape based on actual atomic nodes
-        # ---------------------------------------------------------
-        x_grid = np.linspace(0, 10, 100)
-        y_grid = np.linspace(0, 10, 100)
-        X, Y = np.meshgrid(x_grid, y_grid)
-        Z = np.zeros_like(X)
-        
-        for px, py in zip(points_x, points_y):
-            Z += 1.2 * np.exp(-((X - px)**2 + (Y - py)**2) / 0.25)
-            
-        Z += 0.5 
-        Z = np.clip(Z, 0, 15) 
-        
-        min_idx = np.unravel_index(np.argmin(Z), Z.shape)
-        cavity_x, cavity_y, cavity_z = X[min_idx], Y[min_idx], Z[min_idx]
-        
-        # ---------------------------------------------------------
-        # PATH UPDATE: Positron now enters from the bottom
-        # ---------------------------------------------------------
-        path_t = np.linspace(0, 1, 25)
-        start_x, start_y = 5.0, 0.5 # <-- Changed from 8.5, 5.0
-        path_x = start_x + (cavity_x - start_x) * path_t
-        path_y = start_y + (cavity_y - start_y) * path_t
-        
-        path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.3
+    # ---------------------------------------------------------
+    # Compute Energy Landscape based on actual atomic nodes
+    # ---------------------------------------------------------
+    x_grid = np.linspace(0, 10, 100)
+    y_grid = np.linspace(0, 10, 100)
+    X, Y = np.meshgrid(x_grid, y_grid)
+    Z = np.zeros_like(X)
     
+    for px, py in zip(points_x, points_y):
+        Z += 1.2 * np.exp(-((X - px)**2 + (Y - py)**2) / 0.25)
+        
+    Z += 0.5 
+    Z = np.clip(Z, 0, 15) 
+    
+    min_idx = np.unravel_index(np.argmin(Z), Z.shape)
+    cavity_x, cavity_y, cavity_z = X[min_idx], Y[min_idx], Z[min_idx]
+    
+    # ---------------------------------------------------------
+    # PATH UPDATE: Positron now enters from the bottom
+    # ---------------------------------------------------------
+    path_t = np.linspace(0, 1, 25)
+    start_x, start_y = 5.0, 0.5 # <-- Changed from 8.5, 5.0
+    path_x = start_x + (cavity_x - start_x) * path_t
+    path_y = start_y + (cavity_y - start_y) * path_t
+    
+    path_z = scipy.ndimage.map_coordinates(Z, [path_y * 10, path_x * 10], order=1) + 0.3
+
+    # ==========================================
+    # LEFT COLUMN: Physical Polymer Structure (Matplotlib)
+    # ==========================================
+    with col1:
+        st.subheader("1. Amorphous Polymer Matrix")
+        
+        fig_struct, ax_struct = plt.subplots(figsize=(6, 6))
+        
+        for cx, cy in chain_segments:
+            ax_struct.plot(cx, cy, '-', color='#4a69bd', alpha=0.7, linewidth=2.5)
+            ax_struct.scatter(cx, cy, color='#4a69bd', s=15, zorder=3)
+
+        ax_struct.plot(path_x, path_y, color='white', linestyle='--', linewidth=2.5, label="Positron Path")
+        ax_struct.scatter(path_x[0], path_y[0], color='#2ed573', s=150, zorder=5, label="Thermalized Positron")
+        ax_struct.scatter(cavity_x, cavity_y, color='#ff4757', s=250, marker='*', zorder=5, label="Trapped in Void")
+        
+        ax_struct.set_facecolor('#1e272e') 
+        ax_struct.set_xlim(0, 10)
+        ax_struct.set_ylim(0, 10)
+        ax_struct.set_xlabel("X (nm)")
+        ax_struct.set_ylabel("Y (nm)")
+        ax_struct.legend(loc="lower left", facecolor='black', labelcolor='white', framealpha=0.7)
+        
+        st.pyplot(fig_struct)
+
+    # ==========================================
+    # RIGHT COLUMN: Computed Energy Landscape (Plotly Interactive)
+    # ==========================================
+    with col2:
+        st.subheader("2. Resulting Energy Landscape")
+        
+        fig_loc = go.Figure()
+
+        # 3D Surface
+        fig_loc.add_trace(go.Surface(
+            z=Z, x=x_grid, y=y_grid, 
+            colorscale='Plasma', 
+            opacity=0.9,
+            colorbar=dict(title="Energy Barrier", len=0.5)
+        ))
+
+        # Positron Path
+        fig_loc.add_trace(go.Scatter3d(
+            x=path_x, y=path_y, z=path_z,
+            mode='lines',
+            line=dict(color='white', width=6, dash='dash'),
+            name='Positron Path'
+        ))
+
+        # Start Point (Thermalized)
+        fig_loc.add_trace(go.Scatter3d(
+            x=[path_x[0]], y=[path_y[0]], z=[path_z[0]],
+            mode='markers',
+            marker=dict(color='#2ed573', size=8),
+            name='Thermalized Positron'
+        ))
+
+        # End Point (Trapped)
+        fig_loc.add_trace(go.Scatter3d(
+            x=[cavity_x], y=[cavity_y], z=[cavity_z + 0.5],
+            mode='markers',
+            marker=dict(color='#ff4757', size=10, symbol='diamond'),
+            name='Trapped in Void'
+        ))
+
+        # Formatting the Interactive Plot
+        fig_loc.update_layout(
+            height=750,  
+            scene=dict(
+                aspectratio=dict(x=1, y=1, z=1), 
+                xaxis_title='X (nm)',
+                yaxis_title='Y (nm)',
+                zaxis_title='Energy (Repulsion)',
+                xaxis=dict(range=[0, 10], showgrid=False),
+                yaxis=dict(range=[0, 10], showgrid=False),
+                zaxis=dict(range=[0, 15], showgrid=False), 
+                camera=dict(
+                    eye=dict(x=-1.5, y=-1.5, z=1.2)
+                )
+            ),
+            margin=dict(l=0, r=0, b=0, t=0), 
+            legend=dict(
+                orientation="h",
+                yanchor="bottom", y=0.95, 
+                xanchor="right", x=1
+            )
+        )
+        # Inside with col2
+        st.plotly_chart(fig_loc, use_container_width=True, key="energy_landscape_surface")
+        
+        st.markdown("""
+        By comparing the physical matrix (left) to the computed energy landscape (right), you can clearly see how irregular polymer packing dictates the positron's destination. The positron is repelled by the dense ridges of the molecular backbone and naturally flows down into the deep, low-energy basin formed by the structural void. *(You can click and drag the 3D plot to rotate the energy landscape).*
+        """)
+    
+        st.markdown("""
+        As seen in the 3D landscape above, the positron avoids the bright yellow/orange peaks (the dense polyacrylic chains) and rolls down into the dark purple valley (the physical void). Once localized at the bottom of this potential energy well, it is ready for Step 2: forming Positronium.
+        """)
         # ==========================================
-        # LEFT COLUMN: Physical Polymer Structure (Matplotlib)
+        # STEP 2: Capturing a Partner (The Spur Model)
         # ==========================================
+        st.header("Step 2: Capturing a Partner & Forming Positronium")
+        
+        st.markdown(r"""
+        ### The Ionization Track (Spur Model)
+        As the energetic positron ($e^+$) enters the polymer, it travels via a series of discrete **collisions**. At every collision point, the positron has enough energy to knock an electron ($e^-$) off a polymer molecule, leaving behind a heavy parent ion ($M^+$).
+        
+        This sequence of events creates the **Spur**: a localized cluster of ions and electrons. Once the positron has scattered enough times to lose its kinetic energy (thermalize), it settles into a void and captures one of these nearby electrons via Coulomb attraction.
+        """)
+        
+        # ---------------------------------------------------------
+        # 3D INTERACTIVE VISUALIZATION: Discrete Scattering Spur
+        # ---------------------------------------------------------
+        st.subheader("3D Visualization: Collision-Induced Ionization")
+        
+        # 1. Generate a short, discrete 3D Random Walk (Fewer collisions)
+        np.random.seed(50)
+        n_collisions = 12
+        start_pos = np.array([10, -8, 8])
+        path = np.zeros((n_collisions, 3))
+        path[0] = start_pos
+        
+        # Generate segments with a "pull" toward the void at [0,0,0]
+        for i in range(1, n_collisions):
+            pull = -path[i-1] / np.linalg.norm(path[i-1]) * 2.5
+            random_scatter = np.random.normal(0, 1.8, 3)
+            path[i] = path[i-1] + random_scatter + pull
+        
+        # 2. Place Ions (M+) and Electrons (e-) at EVERY collision point
+        # (Offsetting electrons slightly from the ions for visual clarity)
+        ions_x, ions_y, ions_z = path[:-1, 0], path[:-1, 1], path[:-1, 2]
+        electrons_x = ions_x + np.random.normal(0, 0.5, n_collisions-1)
+        electrons_y = ions_y + np.random.normal(0, 0.5, n_collisions-1)
+        electrons_z = ions_z + np.random.normal(0, 0.5, n_collisions-1)
+        
+        # The final thermalized position and the specific electron to be captured
+        final_pos = path[-1]
+        captured_e = np.array([electrons_x[-1], electrons_y[-1], electrons_z[-1]])
+        
+        fig_spur = go.Figure()
+        
+        # --- 1. The Free Volume Void (Central Sphere) ---
+        u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+        v_rad = 4.0
+        sphere_x = v_rad * np.cos(u) * np.sin(v)
+        sphere_y = v_rad * np.sin(u) * np.sin(v)
+        sphere_z = v_rad * np.cos(v)
+        fig_spur.add_trace(go.Mesh3d(x=sphere_x.flatten(), y=sphere_y.flatten(), z=sphere_z.flatten(), 
+                                    alphahull=0, opacity=0.1, color='cyan', name='Free Volume Void'))
+        
+        # --- 2. The Positron Track (The Path) ---
+        fig_spur.add_trace(go.Scatter3d(
+            x=path[:,0], y=path[:,1], z=path[:,2], 
+            mode='lines',
+            line=dict(color='white', width=4, dash='solid'), 
+            name='Positron Path (e<sup>+</sup>)' # Fixed: HTML superscript
+        ))
+        
+        # --- 3. Ionization Centers (M+) at every collision ---
+        fig_spur.add_trace(go.Scatter3d(
+            x=ions_x, y=ions_y, z=ions_z, 
+            mode='markers',
+            marker=dict(color='#ffa502', size=6, symbol='x'), 
+            name='Ionization Center (M<sup>+</sup>)' # Fixed
+        ))
+        
+        # --- 4. Spur Electrons (e-) scattered along the track ---
+        fig_spur.add_trace(go.Scatter3d(
+            x=electrons_x[:-1], y=electrons_y[:-1], z=electrons_z[:-1], 
+            mode='markers',
+            marker=dict(color='#1e90ff', size=4, symbol='circle'), 
+            name='Spur Electrons (e<sup>-</sup>)' # Fixed
+        ))
+        
+        # --- 5. The Final Capture (Ps Formation) ---
+        # Thermalized Positron (Red)
+        fig_spur.add_trace(go.Scatter3d(
+            x=[final_pos[0]], y=[final_pos[1]], z=[final_pos[2]], 
+            mode='markers',
+            marker=dict(color='#ff4757', size=12), 
+            name='Thermalized e<sup>+</sup>' # Fixed
+        ))
+        
+        # Captured Electron (Bright Blue)
+        fig_spur.add_trace(go.Scatter3d(
+            x=[captured_e[0]], y=[captured_e[1]], z=[captured_e[2]], 
+            mode='markers',
+            marker=dict(color='#1e90ff', size=12, line=dict(color='white', width=2)), 
+            name='Captured e<sup>-</sup>' # Fixed
+        ))
+        
+        # Attraction Force Vector
+        fig_spur.add_trace(go.Scatter3d(x=[final_pos[0], captured_e[0]], 
+                                        y=[final_pos[1], captured_e[1]], 
+                                        z=[final_pos[2], captured_e[2]],
+                                        mode='lines', line=dict(color='yellow', width=8), 
+                                        name='Coulomb Attraction'))
+        
+        fig_spur.update_layout(
+            height=750,
+            scene=dict(
+                xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False),
+                aspectmode='cube',
+                camera=dict(eye=dict(x=1.2, y=1.2, z=0.8))
+            ),
+            margin=dict(l=0, r=0, b=0, t=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(font=dict(color="white"), yanchor="top", y=0.95, xanchor="left", x=0.05)
+        )
+        
+        # In Step 2
+        st.plotly_chart(fig_spur, use_container_width=True, key="spur_model_3d_chart")
+        
+        # ---------------------------------------------------------
+        # EXISTING VISUALIZATION: Spin States (Corrected Syntax)
+        # ---------------------------------------------------------
+        col1, col2 = st.columns(2)
+        
+        # Orbit logic for the 3D plots
+        theta = np.linspace(0, 2 * np.pi, 100)
+        orbit_x = np.cos(theta)
+        orbit_y = np.sin(theta)
+        orbit_z = np.zeros_like(theta)
+        
+        def create_ps_figure(is_ortho):
+            fig = go.Figure()
+            fig.add_trace(go.Scatter3d(x=orbit_x, y=orbit_y, z=orbit_z, mode='lines', line=dict(color='gray', dash='dash', width=3)))
+            fig.add_trace(go.Scatter3d(x=[0], y=[0], z=[0], mode='markers', marker=dict(size=4, color='white', symbol='cross')))
+            
+            # Positron
+            fig.add_trace(go.Scatter3d(x=[1], y=[0], z=[0], mode='markers', marker=dict(size=14, color='#ff4757')))
+            fig.add_trace(go.Scatter3d(x=[1, 1], y=[0, 0], z=[0, 0.8], mode='lines', line=dict(color='#ff4757', width=6)))
+            fig.add_trace(go.Cone(x=[1], y=[0], z=[0.8], u=[0], v=[0], w=[0.5], sizeref=0.3, showscale=False, colorscale=[[0, '#ff4757'], [1, '#ff4757']]))
+        
+            # Electron
+            z_end = 0.8 if is_ortho else -0.8
+            cone_w = 0.5 if is_ortho else -0.5
+            fig.add_trace(go.Scatter3d(x=[-1], y=[0], z=[0], mode='markers', marker=dict(size=14, color='#4a69bd')))
+            fig.add_trace(go.Scatter3d(x=[-1, -1], y=[0, 0], z=[0, z_end], mode='lines', line=dict(color='#4a69bd', width=6)))
+            fig.add_trace(go.Cone(x=[-1], y=[0], z=[z_end], u=[0], v=[0], w=[cone_w], sizeref=0.3, showscale=False, colorscale=[[0, '#4a69bd'], [1, '#4a69bd']]))
+        
+            fig.update_layout(
+                scene=dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False), camera=dict(eye=dict(x=0, y=-1.8, z=0.6))),
+                height=350, margin=dict(l=0, r=0, b=0, t=0), showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
+            )
+            return fig
+        
         with col1:
-            st.subheader("1. Amorphous Polymer Matrix")
+            st.subheader("Para-Positronium (p-Ps)")
+            st.plotly_chart(create_ps_figure(is_ortho=False), use_container_width=True, key="para_ps_orbit")
+            st.markdown(r"""
+            * **Spin Alignment:** Anti-parallel ($\uparrow \downarrow$)
+            * **Total Spin:** $S = 0$ (Singlet)
+            * **Formation Probability:** 25%
+            * **Vacuum Lifetime:** ~0.125 ns
             
-            fig_struct, ax_struct = plt.subplots(figsize=(6, 6))
-            
-            for cx, cy in chain_segments:
-                ax_struct.plot(cx, cy, '-', color='#4a69bd', alpha=0.7, linewidth=2.5)
-                ax_struct.scatter(cx, cy, color='#4a69bd', s=15, zorder=3)
-    
-            ax_struct.plot(path_x, path_y, color='white', linestyle='--', linewidth=2.5, label="Positron Path")
-            ax_struct.scatter(path_x[0], path_y[0], color='#2ed573', s=150, zorder=5, label="Thermalized Positron")
-            ax_struct.scatter(cavity_x, cavity_y, color='#ff4757', s=250, marker='*', zorder=5, label="Trapped in Void")
-            
-            ax_struct.set_facecolor('#1e272e') 
-            ax_struct.set_xlim(0, 10)
-            ax_struct.set_ylim(0, 10)
-            ax_struct.set_xlabel("X (nm)")
-            ax_struct.set_ylabel("Y (nm)")
-            ax_struct.legend(loc="lower left", facecolor='black', labelcolor='white', framealpha=0.7)
-            
-            st.pyplot(fig_struct)
-    
-        # ==========================================
-        # RIGHT COLUMN: Computed Energy Landscape (Plotly Interactive)
-        # ==========================================
-        with col2:
-            st.subheader("2. Resulting Energy Landscape")
-            
-            fig_loc = go.Figure()
-    
-            # 3D Surface
-            fig_loc.add_trace(go.Surface(
-                z=Z, x=x_grid, y=y_grid, 
-                colorscale='Plasma', 
-                opacity=0.9,
-                colorbar=dict(title="Energy Barrier", len=0.5)
-            ))
-    
-            # Positron Path
-            fig_loc.add_trace(go.Scatter3d(
-                x=path_x, y=path_y, z=path_z,
-                mode='lines',
-                line=dict(color='white', width=6, dash='dash'),
-                name='Positron Path'
-            ))
-    
-            # Start Point (Thermalized)
-            fig_loc.add_trace(go.Scatter3d(
-                x=[path_x[0]], y=[path_y[0]], z=[path_z[0]],
-                mode='markers',
-                marker=dict(color='#2ed573', size=8),
-                name='Thermalized Positron'
-            ))
-    
-            # End Point (Trapped)
-            fig_loc.add_trace(go.Scatter3d(
-                x=[cavity_x], y=[cavity_y], z=[cavity_z + 0.5],
-                mode='markers',
-                marker=dict(color='#ff4757', size=10, symbol='diamond'),
-                name='Trapped in Void'
-            ))
-    
-            # Formatting the Interactive Plot
-            fig_loc.update_layout(
-                height=750,  
-                scene=dict(
-                    aspectratio=dict(x=1, y=1, z=1), 
-                    xaxis_title='X (nm)',
-                    yaxis_title='Y (nm)',
-                    zaxis_title='Energy (Repulsion)',
-                    xaxis=dict(range=[0, 10], showgrid=False),
-                    yaxis=dict(range=[0, 10], showgrid=False),
-                    zaxis=dict(range=[0, 15], showgrid=False), 
-                    camera=dict(
-                        eye=dict(x=-1.5, y=-1.5, z=1.2)
-                    )
-                ),
-                margin=dict(l=0, r=0, b=0, t=0), 
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom", y=0.95, 
-                    xanchor="right", x=1
-                )
-            )
-            # Inside with col2
-            st.plotly_chart(fig_loc, use_container_width=True, key="energy_landscape_surface")
-            
-            st.markdown("""
-            By comparing the physical matrix (left) to the computed energy landscape (right), you can clearly see how irregular polymer packing dictates the positron's destination. The positron is repelled by the dense ridges of the molecular backbone and naturally flows down into the deep, low-energy basin formed by the structural void. *(You can click and drag the 3D plot to rotate the energy landscape).*
+            The opposite spins allow for rapid self-annihilation. It disappears almost instantly, making it a poor probe for cavity size.
             """)
         
-            st.markdown("""
-            As seen in the 3D landscape above, the positron avoids the bright yellow/orange peaks (the dense polyacrylic chains) and rolls down into the dark purple valley (the physical void). Once localized at the bottom of this potential energy well, it is ready for Step 2: forming Positronium.
-            """)
-            # ==========================================
-            # STEP 2: Capturing a Partner (The Spur Model)
-            # ==========================================
-            st.header("Step 2: Capturing a Partner & Forming Positronium")
-            
+        with col2:
+            st.subheader("Ortho-Positronium (o-Ps)")
+            st.plotly_chart(create_ps_figure(is_ortho=True), use_container_width=True, key="ortho_ps_orbit")
             st.markdown(r"""
-            ### The Ionization Track (Spur Model)
-            As the energetic positron ($e^+$) enters the polymer, it travels via a series of discrete **collisions**. At every collision point, the positron has enough energy to knock an electron ($e^-$) off a polymer molecule, leaving behind a heavy parent ion ($M^+$).
+            * **Spin Alignment:** Parallel ($\uparrow \uparrow$)
+            * **Total Spin:** $S = 1$ (Triplet)
+            * **Formation Probability:** 75%
+            * **Vacuum Lifetime:** ~142 ns
             
-            This sequence of events creates the **Spur**: a localized cluster of ions and electrons. Once the positron has scattered enough times to lose its kinetic energy (thermalize), it settles into a void and captures one of these nearby electrons via Coulomb attraction.
+            The parallel spins forbid simple two-photon decay. Its **extended lifetime** allows it to bounce off cavity walls thousands of times, becoming our "measuring stick."
             """)
+        
+        st.markdown(r"---")
+        st.subheader("Why the 3:1 Ratio? (Quantum Multiplicity)")
+        
+        st.markdown(r"""
+        The reason **Ortho-Positronium (o-Ps)** is formed three times as often as **Para-Positronium (p-Ps)** is a result of quantum statistics. Both the electron and positron are spin-1/2 particles. When they pair up, their spins combine into a total spin ($S$).
+        
+        The number of possible orientations (states) for a given spin is defined by the **Multiplicity formula**:
+        $$g = 2S + 1$$
+        
+        There are **four** possible quantum spin combinations in total:
+        """)
+        
+        # Create a clean comparison table for the spin states
+        st.markdown(r"""
+        | State | Total Spin ($S$) | Multiplicity ($2S + 1$) | Spin Alignment | Formation Probability |
+        | :--- | :---: | :---: | :---: | :---: |
+        | **Para-Positronium** | $0$ | $1$ state | $\uparrow\downarrow$ (Singlet) | **25%** ($1/4$) |
+        | **Ortho-Positronium** | $1$ | $3$ states | $\uparrow\uparrow$ (Triplet) | **75%** ($3/4$) |
+        """)
+        
+        st.info(r"""
+        **The Statistical Weight:** Because each of the 4 quantum states is equally likely to occur during the random capture process in the polymer spur, o-Ps naturally dominates the population. In PALS data, this 75% "triplet" population is our primary tool for measuring the size of free volume cavities.
+        """)
+        
+        st.markdown("""
+        ### Step 3: The Rules of Spin
+        Both the electron and the positron are fermions, meaning they each possess an intrinsic angular momentum, or "spin", of $s = 1/2$. When these two particles bind together, quantum mechanics dictates that their spins must combine. 
+        
+        Because spin is a vector, these two $1/2$ spins can either point in opposite directions (canceling out) or point in the same direction (adding together). This creates two fundamentally different "species" of Positronium.
+        """)
+        
+        st.divider()
+        st.markdown("### Step 4: The Two Quantum States (Singlet vs. Triplet)")
+        
+        # Quantum Parameters Comparison
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info("""
+            ### Para-Positronium (p-Ps)
+            **The Singlet State**
             
-            # ---------------------------------------------------------
-            # 3D INTERACTIVE VISUALIZATION: Discrete Scattering Spur
-            # ---------------------------------------------------------
-            st.subheader("3D Visualization: Collision-Induced Ionization")
+            When the spins are anti-parallel, they cancel each other out. There is only one unique mathematical way for this to happen, hence the name "Singlet".
             
-            # 1. Generate a short, discrete 3D Random Walk (Fewer collisions)
-            np.random.seed(50)
-            n_collisions = 12
-            start_pos = np.array([10, -8, 8])
-            path = np.zeros((n_collisions, 3))
-            path[0] = start_pos
-            
-            # Generate segments with a "pull" toward the void at [0,0,0]
-            for i in range(1, n_collisions):
-                pull = -path[i-1] / np.linalg.norm(path[i-1]) * 2.5
-                random_scatter = np.random.normal(0, 1.8, 3)
-                path[i] = path[i-1] + random_scatter + pull
-            
-            # 2. Place Ions (M+) and Electrons (e-) at EVERY collision point
-            # (Offsetting electrons slightly from the ions for visual clarity)
-            ions_x, ions_y, ions_z = path[:-1, 0], path[:-1, 1], path[:-1, 2]
-            electrons_x = ions_x + np.random.normal(0, 0.5, n_collisions-1)
-            electrons_y = ions_y + np.random.normal(0, 0.5, n_collisions-1)
-            electrons_z = ions_z + np.random.normal(0, 0.5, n_collisions-1)
-            
-            # The final thermalized position and the specific electron to be captured
-            final_pos = path[-1]
-            captured_e = np.array([electrons_x[-1], electrons_y[-1], electrons_z[-1]])
-            
-            fig_spur = go.Figure()
-            
-            # --- 1. The Free Volume Void (Central Sphere) ---
-            u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
-            v_rad = 4.0
-            sphere_x = v_rad * np.cos(u) * np.sin(v)
-            sphere_y = v_rad * np.sin(u) * np.sin(v)
-            sphere_z = v_rad * np.cos(v)
-            fig_spur.add_trace(go.Mesh3d(x=sphere_x.flatten(), y=sphere_y.flatten(), z=sphere_z.flatten(), 
-                                        alphahull=0, opacity=0.1, color='cyan', name='Free Volume Void'))
-            
-            # --- 2. The Positron Track (The Path) ---
-            fig_spur.add_trace(go.Scatter3d(
-                x=path[:,0], y=path[:,1], z=path[:,2], 
-                mode='lines',
-                line=dict(color='white', width=4, dash='solid'), 
-                name='Positron Path (e<sup>+</sup>)' # Fixed: HTML superscript
-            ))
-            
-            # --- 3. Ionization Centers (M+) at every collision ---
-            fig_spur.add_trace(go.Scatter3d(
-                x=ions_x, y=ions_y, z=ions_z, 
-                mode='markers',
-                marker=dict(color='#ffa502', size=6, symbol='x'), 
-                name='Ionization Center (M<sup>+</sup>)' # Fixed
-            ))
-            
-            # --- 4. Spur Electrons (e-) scattered along the track ---
-            fig_spur.add_trace(go.Scatter3d(
-                x=electrons_x[:-1], y=electrons_y[:-1], z=electrons_z[:-1], 
-                mode='markers',
-                marker=dict(color='#1e90ff', size=4, symbol='circle'), 
-                name='Spur Electrons (e<sup>-</sup>)' # Fixed
-            ))
-            
-            # --- 5. The Final Capture (Ps Formation) ---
-            # Thermalized Positron (Red)
-            fig_spur.add_trace(go.Scatter3d(
-                x=[final_pos[0]], y=[final_pos[1]], z=[final_pos[2]], 
-                mode='markers',
-                marker=dict(color='#ff4757', size=12), 
-                name='Thermalized e<sup>+</sup>' # Fixed
-            ))
-            
-            # Captured Electron (Bright Blue)
-            fig_spur.add_trace(go.Scatter3d(
-                x=[captured_e[0]], y=[captured_e[1]], z=[captured_e[2]], 
-                mode='markers',
-                marker=dict(color='#1e90ff', size=12, line=dict(color='white', width=2)), 
-                name='Captured e<sup>-</sup>' # Fixed
-            ))
-            
-            # Attraction Force Vector
-            fig_spur.add_trace(go.Scatter3d(x=[final_pos[0], captured_e[0]], 
-                                            y=[final_pos[1], captured_e[1]], 
-                                            z=[final_pos[2], captured_e[2]],
-                                            mode='lines', line=dict(color='yellow', width=8), 
-                                            name='Coulomb Attraction'))
-            
-            fig_spur.update_layout(
-                height=750,
-                scene=dict(
-                    xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False),
-                    aspectmode='cube',
-                    camera=dict(eye=dict(x=1.2, y=1.2, z=0.8))
-                ),
-                margin=dict(l=0, r=0, b=0, t=0),
-                paper_bgcolor='rgba(0,0,0,0)',
-                legend=dict(font=dict(color="white"), yanchor="top", y=0.95, xanchor="left", x=0.05)
-            )
-            
-            # In Step 2
-            st.plotly_chart(fig_spur, use_container_width=True, key="spur_model_3d_chart")
-            
-            # ---------------------------------------------------------
-            # EXISTING VISUALIZATION: Spin States (Corrected Syntax)
-            # ---------------------------------------------------------
-            col1, col2 = st.columns(2)
-            
-            # Orbit logic for the 3D plots
-            theta = np.linspace(0, 2 * np.pi, 100)
-            orbit_x = np.cos(theta)
-            orbit_y = np.sin(theta)
-            orbit_z = np.zeros_like(theta)
-            
-            def create_ps_figure(is_ortho):
-                fig = go.Figure()
-                fig.add_trace(go.Scatter3d(x=orbit_x, y=orbit_y, z=orbit_z, mode='lines', line=dict(color='gray', dash='dash', width=3)))
-                fig.add_trace(go.Scatter3d(x=[0], y=[0], z=[0], mode='markers', marker=dict(size=4, color='white', symbol='cross')))
-                
-                # Positron
-                fig.add_trace(go.Scatter3d(x=[1], y=[0], z=[0], mode='markers', marker=dict(size=14, color='#ff4757')))
-                fig.add_trace(go.Scatter3d(x=[1, 1], y=[0, 0], z=[0, 0.8], mode='lines', line=dict(color='#ff4757', width=6)))
-                fig.add_trace(go.Cone(x=[1], y=[0], z=[0.8], u=[0], v=[0], w=[0.5], sizeref=0.3, showscale=False, colorscale=[[0, '#ff4757'], [1, '#ff4757']]))
-            
-                # Electron
-                z_end = 0.8 if is_ortho else -0.8
-                cone_w = 0.5 if is_ortho else -0.5
-                fig.add_trace(go.Scatter3d(x=[-1], y=[0], z=[0], mode='markers', marker=dict(size=14, color='#4a69bd')))
-                fig.add_trace(go.Scatter3d(x=[-1, -1], y=[0, 0], z=[0, z_end], mode='lines', line=dict(color='#4a69bd', width=6)))
-                fig.add_trace(go.Cone(x=[-1], y=[0], z=[z_end], u=[0], v=[0], w=[cone_w], sizeref=0.3, showscale=False, colorscale=[[0, '#4a69bd'], [1, '#4a69bd']]))
-            
-                fig.update_layout(
-                    scene=dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False), camera=dict(eye=dict(x=0, y=-1.8, z=0.6))),
-                    height=350, margin=dict(l=0, r=0, b=0, t=0), showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
-                )
-                return fig
-            
-            with col1:
-                st.subheader("Para-Positronium (p-Ps)")
-                st.plotly_chart(create_ps_figure(is_ortho=False), use_container_width=True, key="para_ps_orbit")
-                st.markdown(r"""
-                * **Spin Alignment:** Anti-parallel ($\uparrow \downarrow$)
-                * **Total Spin:** $S = 0$ (Singlet)
-                * **Formation Probability:** 25%
-                * **Vacuum Lifetime:** ~0.125 ns
-                
-                The opposite spins allow for rapid self-annihilation. It disappears almost instantly, making it a poor probe for cavity size.
-                """)
-            
-            with col2:
-                st.subheader("Ortho-Positronium (o-Ps)")
-                st.plotly_chart(create_ps_figure(is_ortho=True), use_container_width=True, key="ortho_ps_orbit")
-                st.markdown(r"""
-                * **Spin Alignment:** Parallel ($\uparrow \uparrow$)
-                * **Total Spin:** $S = 1$ (Triplet)
-                * **Formation Probability:** 75%
-                * **Vacuum Lifetime:** ~142 ns
-                
-                The parallel spins forbid simple two-photon decay. Its **extended lifetime** allows it to bounce off cavity walls thousands of times, becoming our "measuring stick."
-                """)
-            
-            st.markdown(r"---")
-            st.subheader("Why the 3:1 Ratio? (Quantum Multiplicity)")
-            
-            st.markdown(r"""
-            The reason **Ortho-Positronium (o-Ps)** is formed three times as often as **Para-Positronium (p-Ps)** is a result of quantum statistics. Both the electron and positron are spin-1/2 particles. When they pair up, their spins combine into a total spin ($S$).
-            
-            The number of possible orientations (states) for a given spin is defined by the **Multiplicity formula**:
-            $$g = 2S + 1$$
-            
-            There are **four** possible quantum spin combinations in total:
+            * **Spin Alignment:** Anti-Parallel ($\\uparrow \\downarrow$)
+            * **Total Spin ($S$):** $1/2 - 1/2 = 0$
+            * **Magnetic Quantum Number ($m_s$):** 0
+            * **Orbital Angular Momentum ($L$):** 0 (Ground state)
+            * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
+            * **Charge Parity ($C = (-1)^{L+S}$):** +1 (Even)
+            * **Vacuum Lifetime:** ~125 ps
+            * **Formation Probability:** 25% (1 out of 4 possible spin states)
             """)
+        with col2:
+            st.warning("""
+            ### Ortho-Positronium (o-Ps)
+            **The Triplet State**
             
-            # Create a clean comparison table for the spin states
-            st.markdown(r"""
-            | State | Total Spin ($S$) | Multiplicity ($2S + 1$) | Spin Alignment | Formation Probability |
-            | :--- | :---: | :---: | :---: | :---: |
-            | **Para-Positronium** | $0$ | $1$ state | $\uparrow\downarrow$ (Singlet) | **25%** ($1/4$) |
-            | **Ortho-Positronium** | $1$ | $3$ states | $\uparrow\uparrow$ (Triplet) | **75%** ($3/4$) |
+            When the spins are parallel, they add up. Because a total spin of 1 can orient itself in three different ways relative to an external axis (down, flat, or up), it is called a "Triplet".
+            
+            * **Spin Alignment:** Parallel ($\\uparrow \\uparrow$)
+            * **Total Spin ($S$):** $1/2 + 1/2 = 1$
+            * **Magnetic Quantum Number ($m_s$):** -1, 0, or +1
+            * **Orbital Angular Momentum ($L$):** 0 (Ground state)
+            * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
+            * **Charge Parity ($C = (-1)^{L+S}$):** -1 (Odd)
+            * **Vacuum Lifetime:** ~142 ns
+            * **Formation Probability:** 75% (3 out of 4 possible spin states)
             """)
-            
-            st.info(r"""
-            **The Statistical Weight:** Because each of the 4 quantum states is equally likely to occur during the random capture process in the polymer spur, o-Ps naturally dominates the population. In PALS data, this 75% "triplet" population is our primary tool for measuring the size of free volume cavities.
-            """)
-            
-            st.markdown("""
-            ### Step 3: The Rules of Spin
-            Both the electron and the positron are fermions, meaning they each possess an intrinsic angular momentum, or "spin", of $s = 1/2$. When these two particles bind together, quantum mechanics dictates that their spins must combine. 
-            
-            Because spin is a vector, these two $1/2$ spins can either point in opposite directions (canceling out) or point in the same direction (adding together). This creates two fundamentally different "species" of Positronium.
-            """)
-            
-            st.divider()
-            st.markdown("### Step 4: The Two Quantum States (Singlet vs. Triplet)")
-            
-            # Quantum Parameters Comparison
-            col1, col2 = st.columns(2)
-            with col1:
-                st.info("""
-                ### Para-Positronium (p-Ps)
-                **The Singlet State**
-                
-                When the spins are anti-parallel, they cancel each other out. There is only one unique mathematical way for this to happen, hence the name "Singlet".
-                
-                * **Spin Alignment:** Anti-Parallel ($\\uparrow \\downarrow$)
-                * **Total Spin ($S$):** $1/2 - 1/2 = 0$
-                * **Magnetic Quantum Number ($m_s$):** 0
-                * **Orbital Angular Momentum ($L$):** 0 (Ground state)
-                * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
-                * **Charge Parity ($C = (-1)^{L+S}$):** +1 (Even)
-                * **Vacuum Lifetime:** ~125 ps
-                * **Formation Probability:** 25% (1 out of 4 possible spin states)
-                """)
-            with col2:
-                st.warning("""
-                ### Ortho-Positronium (o-Ps)
-                **The Triplet State**
-                
-                When the spins are parallel, they add up. Because a total spin of 1 can orient itself in three different ways relative to an external axis (down, flat, or up), it is called a "Triplet".
-                
-                * **Spin Alignment:** Parallel ($\\uparrow \\uparrow$)
-                * **Total Spin ($S$):** $1/2 + 1/2 = 1$
-                * **Magnetic Quantum Number ($m_s$):** -1, 0, or +1
-                * **Orbital Angular Momentum ($L$):** 0 (Ground state)
-                * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
-                * **Charge Parity ($C = (-1)^{L+S}$):** -1 (Odd)
-                * **Vacuum Lifetime:** ~142 ns
-                * **Formation Probability:** 75% (3 out of 4 possible spin states)
-                """)
-            
-            st.divider()
-            st.markdown("""
-            ### Step 5: Hyperfine Splitting
-            The energy levels of Positronium are not a single "line." Because both particles have spin, they interact magnetically. This splits the ground state into two distinct sub-levels.
-            """)
-            
-            # Create the refined visualization
-            fig_ps, (ax_split, ax_spin) = plt.subplots(1, 2, figsize=(12, 5))
-            fig_ps.patch.set_facecolor('#0e1117') # Match Streamlit dark theme if needed
-            
-            # --- Left Panel: Energy Splitting ---
-            ax_split.set_title("Hyperfine Energy Splitting", color='white', fontsize=14)
-            ax_split.set_facecolor('#0e1117')
-            ax_split.axis('off')
-            ax_split.set_xlim(0, 5)
-            ax_split.set_ylim(-1, 3)
-            
-            # The "Baseline" - The n=1 Bohr level (-6.8 eV)
-            ax_split.hlines(0, 1, 2, color='gray', linestyles='dashed', alpha=0.7)
-            ax_split.text(0.5, 0, "Bohr Level (n=1)\nNo Spin Interaction", 
-                        va='center', ha='right', fontsize=9, color='gray')
-            
-            # The split levels
-            # Ortho is red (higher energy due to magnetic repulsion)
-            ax_split.hlines(1.5, 3, 4, color='#ff4757', linewidth=4) 
-            ax_split.text(4.2, 1.5, r"$\mathbf{o-Ps}$ (Triplet)" + "\n$S=1$", 
-                        va='center', fontweight='bold', color='white')
-            
-            # Para is blue (lower energy due to magnetic attraction)
-            ax_split.hlines(-0.5, 3, 4, color='#4a69bd', linewidth=4) 
-            ax_split.text(4.2, -0.5, r"$\mathbf{p-Ps}$ (Singlet)" + "\n$S=0$", 
-                        va='center', fontweight='bold', color='white')
-            
-            # Connection/Splitting lines
-            ax_split.plot([2, 3], [0, 1.5], 'w--', alpha=0.3)
-            ax_split.plot([2, 3], [0, -0.5], 'w--', alpha=0.3)
-            
-            # Energy difference label
-            ax_split.annotate('', xy=(3.5, 1.5), xytext=(3.5, -0.5), 
-                            arrowprops=dict(arrowstyle='<->', color='#ffa502', lw=2))
-            ax_split.text(3.6, 0.5, r"$\Delta E_{hfs} \approx 8.4 \times 10^{-4}$ eV", 
-                        color='#ffa502', fontsize=10, fontweight='bold', va='center')
-            
-            # --- Right Panel: Spin Alignment Sketch ---
-            ax_spin.set_title("Spin Alignments (n=1)", color='white', fontsize=14)
-            ax_spin.set_facecolor('#0e1117')
-            ax_spin.axis('off')
-            ax_spin.set_xlim(-2, 2)
-            ax_spin.set_ylim(-2, 2)
-            
-            # Para-Ps Layout
-            ax_spin.text(-1, 1.4, "Para-Ps (Singlet)", ha='center', color='white', fontweight='bold')
-            ax_spin.text(-1, 1.1, "Anti-Parallel", ha='center', color='gray', fontsize=9)
-            ax_spin.plot(-1.3, 0, 'ro', markersize=22, alpha=0.8) # Positron
-            ax_spin.plot(-0.7, 0, 'bo', markersize=22, alpha=0.8) # Electron
-            ax_spin.text(-1.3, 0, r"$e^+$", color='white', ha='center', va='center', fontweight='bold')
-            ax_spin.text(-0.7, 0, r"$e^-$", color='white', ha='center', va='center', fontweight='bold')
-            # Arrows
-            ax_spin.arrow(-1.3, -0.4, 0, 0.5, head_width=0.1, color='white', lw=2) # Up
-            ax_spin.arrow(-0.7, 0.4, 0, -0.5, head_width=0.1, color='white', lw=2) # Down
-            
-            # Ortho-Ps Layout
-            ax_spin.text(1, 1.4, "Ortho-Ps (Triplet)", ha='center', color='white', fontweight='bold')
-            ax_spin.text(1, 1.1, "Parallel", ha='center', color='gray', fontsize=9)
-            ax_spin.plot(0.7, 0, 'ro', markersize=22, alpha=0.8) # Positron
-            ax_spin.plot(1.3, 0, 'bo', markersize=22, alpha=0.8) # Electron
-            ax_spin.text(0.7, 0, r"$e^+$", color='white', ha='center', va='center', fontweight='bold')
-            ax_spin.text(1.3, 0, r"$e^-$", color='white', ha='center', va='center', fontweight='bold')
-            # Arrows
-            ax_spin.arrow(0.7, -0.4, 0, 0.5, head_width=0.1, color='white', lw=2) # Up
-            ax_spin.arrow(1.3, -0.4, 0, 0.5, head_width=0.1, color='white', lw=2) # Up
-            
-            plt.tight_layout()
-            st.pyplot(fig_ps)
+        
+        st.divider()
+        st.markdown("""
+        ### Step 5: Hyperfine Splitting
+        The energy levels of Positronium are not a single "line." Because both particles have spin, they interact magnetically. This splits the ground state into two distinct sub-levels.
+        """)
+        
+        # Create the refined visualization
+        fig_ps, (ax_split, ax_spin) = plt.subplots(1, 2, figsize=(12, 5))
+        fig_ps.patch.set_facecolor('#0e1117') # Match Streamlit dark theme if needed
+        
+        # --- Left Panel: Energy Splitting ---
+        ax_split.set_title("Hyperfine Energy Splitting", color='white', fontsize=14)
+        ax_split.set_facecolor('#0e1117')
+        ax_split.axis('off')
+        ax_split.set_xlim(0, 5)
+        ax_split.set_ylim(-1, 3)
+        
+        # The "Baseline" - The n=1 Bohr level (-6.8 eV)
+        ax_split.hlines(0, 1, 2, color='gray', linestyles='dashed', alpha=0.7)
+        ax_split.text(0.5, 0, "Bohr Level (n=1)\nNo Spin Interaction", 
+                    va='center', ha='right', fontsize=9, color='gray')
+        
+        # The split levels
+        # Ortho is red (higher energy due to magnetic repulsion)
+        ax_split.hlines(1.5, 3, 4, color='#ff4757', linewidth=4) 
+        ax_split.text(4.2, 1.5, r"$\mathbf{o-Ps}$ (Triplet)" + "\n$S=1$", 
+                    va='center', fontweight='bold', color='white')
+        
+        # Para is blue (lower energy due to magnetic attraction)
+        ax_split.hlines(-0.5, 3, 4, color='#4a69bd', linewidth=4) 
+        ax_split.text(4.2, -0.5, r"$\mathbf{p-Ps}$ (Singlet)" + "\n$S=0$", 
+                    va='center', fontweight='bold', color='white')
+        
+        # Connection/Splitting lines
+        ax_split.plot([2, 3], [0, 1.5], 'w--', alpha=0.3)
+        ax_split.plot([2, 3], [0, -0.5], 'w--', alpha=0.3)
+        
+        # Energy difference label
+        ax_split.annotate('', xy=(3.5, 1.5), xytext=(3.5, -0.5), 
+                        arrowprops=dict(arrowstyle='<->', color='#ffa502', lw=2))
+        ax_split.text(3.6, 0.5, r"$\Delta E_{hfs} \approx 8.4 \times 10^{-4}$ eV", 
+                    color='#ffa502', fontsize=10, fontweight='bold', va='center')
+        
+        # --- Right Panel: Spin Alignment Sketch ---
+        ax_spin.set_title("Spin Alignments (n=1)", color='white', fontsize=14)
+        ax_spin.set_facecolor('#0e1117')
+        ax_spin.axis('off')
+        ax_spin.set_xlim(-2, 2)
+        ax_spin.set_ylim(-2, 2)
+        
+        # Para-Ps Layout
+        ax_spin.text(-1, 1.4, "Para-Ps (Singlet)", ha='center', color='white', fontweight='bold')
+        ax_spin.text(-1, 1.1, "Anti-Parallel", ha='center', color='gray', fontsize=9)
+        ax_spin.plot(-1.3, 0, 'ro', markersize=22, alpha=0.8) # Positron
+        ax_spin.plot(-0.7, 0, 'bo', markersize=22, alpha=0.8) # Electron
+        ax_spin.text(-1.3, 0, r"$e^+$", color='white', ha='center', va='center', fontweight='bold')
+        ax_spin.text(-0.7, 0, r"$e^-$", color='white', ha='center', va='center', fontweight='bold')
+        # Arrows
+        ax_spin.arrow(-1.3, -0.4, 0, 0.5, head_width=0.1, color='white', lw=2) # Up
+        ax_spin.arrow(-0.7, 0.4, 0, -0.5, head_width=0.1, color='white', lw=2) # Down
+        
+        # Ortho-Ps Layout
+        ax_spin.text(1, 1.4, "Ortho-Ps (Triplet)", ha='center', color='white', fontweight='bold')
+        ax_spin.text(1, 1.1, "Parallel", ha='center', color='gray', fontsize=9)
+        ax_spin.plot(0.7, 0, 'ro', markersize=22, alpha=0.8) # Positron
+        ax_spin.plot(1.3, 0, 'bo', markersize=22, alpha=0.8) # Electron
+        ax_spin.text(0.7, 0, r"$e^+$", color='white', ha='center', va='center', fontweight='bold')
+        ax_spin.text(1.3, 0, r"$e^-$", color='white', ha='center', va='center', fontweight='bold')
+        # Arrows
+        ax_spin.arrow(0.7, -0.4, 0, 0.5, head_width=0.1, color='white', lw=2) # Up
+        ax_spin.arrow(1.3, -0.4, 0, 0.5, head_width=0.1, color='white', lw=2) # Up
+        
+        plt.tight_layout()
+        st.pyplot(fig_ps)
 
 
 # ==========================================
