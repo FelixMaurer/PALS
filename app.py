@@ -51,42 +51,68 @@ with tab1:
 # TAB 2: Positronium Formation
 # ==========================================
 with tab2:
-    st.header("Localization & The Quantum States of Positronium")
+    st.header("Step-by-Step: Localization & Positronium Formation")
+
     st.markdown("""
-    Once the positron slows down, it gets trapped in "free volume" cavities—microscopic empty spaces between polymer chains. Here, it captures an electron to form a hydrogen-like bound state called **Positronium (Ps)**. 
+    ### Step 1: Seeking the Void (Localization)
+    After the positron has lost most of its kinetic energy during thermalization, it drifts through the dense polymer matrix. The core electron clouds of the polyacrylic chains create strong atomic exchange repulsive forces. Seeking the path of least resistance, the positron is naturally pushed away from the bulk material and funneled into the microscopic empty spaces—the **free volume cavities**—between the molecular chains. 
+
+    ### Step 2: Capturing a Partner 
+    Once isolated in a cavity (or while transitioning into one), the positron ($e^+$) captures a loose electron ($e^-$) from the surrounding polymer. Because they have equal but opposite electric charges, they bind together via Coulomb attraction to form a metastable, hydrogen-like atom called **Positronium (Ps)**. 
     
-    Because the electron and positron are both fermions (spin-1/2 particles), they can combine in two distinct quantum states depending on how their spins align. This alignment dictates their energy levels, quantum numbers, and ultimately, how they die.
+    Unlike standard Hydrogen (which has a heavy proton fixed in the center), the electron and positron have the exact same mass. Therefore, they orbit around their mutual center of mass, like a binary star system.
+
+    ### Step 3: The Rules of Spin
+    Both the electron and the positron are fermions, meaning they each possess an intrinsic angular momentum, or "spin", of $s = 1/2$. When these two particles bind together, quantum mechanics dictates that their spins must combine. 
+    
+    Because spin is a vector, these two $1/2$ spins can either point in opposite directions (canceling out) or point in the same direction (adding together). This creates two fundamentally different "species" of Positronium.
     """)
     
+    st.divider()
+    st.markdown("### Step 4: The Two Quantum States (Singlet vs. Triplet)")
+
     # Quantum Parameters Comparison
     col1, col2 = st.columns(2)
     with col1:
         st.info("""
         ### Para-Positronium (p-Ps)
         **The Singlet State**
-        * **Spins:** Anti-Parallel ($\\uparrow \\downarrow$)
-        * **Total Spin ($S$):** 0
+        
+        When the spins are anti-parallel, they cancel each other out. There is only one unique mathematical way for this to happen, hence the name "Singlet".
+        
+        * **Spin Alignment:** Anti-Parallel ($\\uparrow \\downarrow$)
+        * **Total Spin ($S$):** $1/2 - 1/2 = 0$
         * **Magnetic Quantum Number ($m_s$):** 0
         * **Orbital Angular Momentum ($L$):** 0 (Ground state)
         * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
         * **Charge Parity ($C = (-1)^{L+S}$):** +1 (Even)
         * **Vacuum Lifetime:** ~125 ps
+        * **Formation Probability:** 25% (1 out of 4 possible spin states)
         """)
     with col2:
         st.warning("""
         ### Ortho-Positronium (o-Ps)
         **The Triplet State**
-        * **Spins:** Parallel ($\\uparrow \\uparrow$)
-        * **Total Spin ($S$):** 1
+        
+        When the spins are parallel, they add up. Because a total spin of 1 can orient itself in three different ways relative to an external axis (down, flat, or up), it is called a "Triplet".
+        
+        * **Spin Alignment:** Parallel ($\\uparrow \\uparrow$)
+        * **Total Spin ($S$):** $1/2 + 1/2 = 1$
         * **Magnetic Quantum Number ($m_s$):** -1, 0, or +1
         * **Orbital Angular Momentum ($L$):** 0 (Ground state)
         * **Parity ($P = (-1)^{L+1}$):** -1 (Odd)
         * **Charge Parity ($C = (-1)^{L+S}$):** -1 (Odd)
         * **Vacuum Lifetime:** ~142 ns
+        * **Formation Probability:** 75% (3 out of 4 possible spin states)
         """)
 
     st.divider()
-    st.subheader("Hyperfine Splitting & Spin Visualization")
+    st.markdown("""
+    ### Step 5: Hyperfine Splitting
+    Because the electron and positron are spinning, they act like tiny bar magnets. In the Triplet state (o-Ps), the "magnets" are aligned, which creates a slightly repulsive magnetic interaction. In the Singlet state (p-Ps), the opposite alignment is magnetically attractive. 
+    
+    This magnetic spin-spin interaction causes a slight difference in their energy levels, known as **Hyperfine Splitting**. Ortho-positronium sits at a slightly higher energy level than para-positronium.
+    """)
     
     fig_ps, (ax_split, ax_spin) = plt.subplots(1, 2, figsize=(12, 5))
     
